@@ -4,3 +4,4 @@
 **/*.sln
 **/*.slnx
 **/*.vcxproj*
+**/*.vcxproj.filters
