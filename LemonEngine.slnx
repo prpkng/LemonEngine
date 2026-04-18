@@ -1,7 +1,0 @@
-<Solution>
-  <Configurations>
-    <Platform Name="x64" />
-  </Configurations>
-  <Project Path="Sandbox/Sandbox.vcxproj" Id="bb8bc0ae-caed-41de-8d9a-ad929e60bc95" />
-  <Project Path="Lemon/Lemon.vcxproj" Id="c5e77724-761e-4db7-8f95-a567bc0fa078" />
-</Solution>
