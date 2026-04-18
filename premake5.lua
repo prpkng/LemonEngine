@@ -25,6 +25,7 @@ project "Lemon"
 
 	includedirs
 	{
+		"%{prj.name}/src",
 		"%{prj.name}/vendor/spdlog/include"
 	}
 
@@ -32,6 +33,7 @@ project "Lemon"
 		cppdialect "C++17"
 		staticruntime "On"
 		systemversion "latest"
+		buildoptions { "/utf-8" }
 		defines
 		{
 			"LM_PLATFORM_WINDOWS",
@@ -69,9 +71,12 @@ project "Sandbox"
 	
 	includedirs
 	{
+		"%{prj.name}/src",
 		"Lemon/vendor/spdlog/include",
 		"Lemon/src"
 	}
+
+
 
 	links
 	{
@@ -82,6 +87,7 @@ project "Sandbox"
 		cppdialect "C++17"
 		staticruntime "On"
 		systemversion "latest"
+		buildoptions { "/utf-8" }
 		defines
 		{
 			"LM_PLATFORM_WINDOWS",
