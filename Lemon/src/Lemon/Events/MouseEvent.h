@@ -2,6 +2,12 @@
 
 #include "Event.h"
 
+#define MOUSE_BUTTON_LEFT		0
+#define MOUSE_BUTTON_RIGHT		1
+#define MOUSE_BUTTON_MIDDLE	    2
+#define MOUSE_BUTTON_4		    3
+#define MOUSE_BUTTON_5		    4
+
 namespace Lemon {
 	class LEMON_API MouseMovedEvent : public Event {
 	public:
@@ -61,6 +67,7 @@ namespace Lemon {
 		uint8_t m_Button;
 	};
 
+
 	class LEMON_API MouseButtonPressedEvent : public MouseButtonEvent
 	{
 	public:
@@ -70,8 +77,9 @@ namespace Lemon {
 
 		std::string ToString() const override
 		{
+			const char* buttonNames[] = { "Left", "Right", "Middle", "Button4", "Button5" };
 			std::stringstream ss;
-			ss << "MouseButtonPressedEvent: " << m_Button;
+			ss << "MouseButtonPressedEvent: " << buttonNames[m_Button];
 			return ss.str();
 		}
 
@@ -87,8 +95,10 @@ namespace Lemon {
 
 		std::string ToString() const override
 		{
+			const char* buttonNames[] = { "Left", "Right", "Middle", "Button4", "Button5" };
 			std::stringstream ss;
-			ss << "MouseButtonReleasedEvent: " << m_Button;
+			
+			ss << "MouseButtonReleasedEvent: " << buttonNames[m_Button];
 			return ss.str();
 		}
 

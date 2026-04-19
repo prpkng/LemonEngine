@@ -1,0 +1,242 @@
+#include "lmpch.h"
+#include "Platform/WindowsWindow.h"
+#include "Lemon/Log.h"
+
+#include "Lemon/Events/ApplicationEvent.h"
+#include "Lemon/Events/MouseEvent.h"
+#include "Lemon/Events/KeyEvent.h"
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+template <typename T> int sgn(T val) {
+	return (T(0) < val) - (val < T(0));
+}
+
+namespace Lemon {
+
+	Window* Window::Create(const WindowProps& props)
+	{
+		return new WindowsWindow(props);
+	}
+
+	WindowsWindow::WindowsWindow(const WindowProps& props)
+	{
+		Init(props);
+	}
+
+	WindowsWindow::~WindowsWindow()
+	{
+		Shutdown();
+	}
+
+	void WindowsWindow::SetVSync(bool enabled)
+	{
+	}
+
+	bool WindowsWindow::IsVSync() const
+	{
+		return false;
+	}
+
+	void WindowsWindow::Init(const WindowProps& props)
+	{
+		m_Data.Title = props.Title;
+		m_Data.Width = props.Width;
+		m_Data.Height = props.Height;
+		m_Data.EventCallback = [](Event&){};
+
+		LM_CORE_INFO("Creating window {0} ({1}, {2})", props.Title, props.Width, props.Height);
+
+
+
+		WNDCLASSEXW wc = {};
+		wc.cbSize = sizeof(WNDCLASSEXW);
+		wc.style = CS_OWNDC;
+		wc.lpfnWndProc = WndProc;
+		wc.cbClsExtra = 0;
+		wc.cbWndExtra = 0;
+		wc.hInstance = GetModuleHandleW(nullptr);
+		wc.hIcon = nullptr;
+		wc.hCursor = nullptr;
+		wc.hbrBackground = nullptr;
+		wc.lpszMenuName = nullptr;
+		wc.lpszClassName = L"LemonWindowClass";
+
+		auto regResult = RegisterClassExW(&wc);
+		LM_CORE_ASSERT(regResult, "Failed to register window class!");
+
+		int x = (GetSystemMetrics(SM_CXSCREEN) - m_Data.Width) / 2;
+		int y = (GetSystemMetrics(SM_CYSCREEN) - m_Data.Height) / 2;
+
+		auto dataPtr = &m_Data;
+		
+		HWND hwnd = CreateWindowExW(
+			0,
+			wc.lpszClassName,
+			L"Lemon window!",
+			WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+			x,
+			y,
+			m_Data.Width,
+			m_Data.Height,
+			nullptr, 
+			nullptr,
+			wc.hInstance,
+			dataPtr
+		);
+
+		m_Handle = hwnd;
+
+		LM_CORE_ASSERT(IsWindow(hwnd), "Failed to create window!");
+		if (!IsWindow(hwnd))
+		{
+			MessageBoxW(nullptr, L"Window creation failed internally", L"Error", MB_OK);
+		}
+		ShowWindow(hwnd, SW_NORMAL);
+		SetVSync(true);
+
+	}
+
+	void WindowsWindow::Shutdown()
+	{
+	}
+
+	void WindowsWindow::OnUpdate() {
+		MSG msg = { 0 };
+		while (PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE)) {
+			TranslateMessage(&msg);
+			DispatchMessageW(&msg);
+		}
+	}
+
+	
+}
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	Lemon::WindowsWindow::WindowData* windowData = nullptr;
+
+	if (message == WM_NCCREATE)
+	{
+		CREATESTRUCT* create = reinterpret_cast<CREATESTRUCT*>(lParam);
+		windowData = reinterpret_cast<Lemon::WindowsWindow::WindowData*>(create->lpCreateParams);
+
+		// Store the pointer to the window data in the user data of the window
+		SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(windowData));
+	}
+	else {
+		windowData = reinterpret_cast<Lemon::WindowsWindow::WindowData*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+	}
+
+	switch (message) {
+
+// ========== WINDOW EVENTS ==========
+#pragma region Window events
+
+	case WM_CLOSE:
+	{
+		auto ev = Lemon::WindowCloseEvent();
+		windowData->EventCallback(ev);
+		return 0;
+	}
+	case WM_SIZE:
+	{
+		auto ev = Lemon::WindowResizeEvent(LOWORD(lParam), HIWORD(lParam));
+		windowData->EventCallback(ev);
+		return 0;
+	}
+	case WM_SIZING:
+	{
+		RECT& rect = (RECT&)lParam;
+		auto ev = Lemon::WindowResizeEvent(rect.right - rect.left, rect.bottom - rect.top);
+		if (rect.left > 4e6)
+			windowData->EventCallback(ev);
+		return true;
+	}
+
+#pragma endregion
+// ========== MOUSE EVENTS ===========
+#pragma region Mouse Events
+
+	case WM_MOUSEMOVE: 
+	{
+		auto ev = Lemon::MouseMovedEvent((float)LOWORD(lParam), (float)HIWORD(lParam));
+		windowData->EventCallback(ev);
+		return 0;
+	}
+
+	case WM_MOUSEWHEEL: 
+	{
+		int delta = HIWORD(wParam);
+		auto ev = Lemon::MouseScrolledEvent(0.0f, sgn(delta));
+		windowData->EventCallback(ev);
+		return 0;
+	}
+	case WM_MOUSEHWHEEL:
+	{
+		int delta = HIWORD(wParam);
+		auto ev = Lemon::MouseScrolledEvent(sgn(delta), 0.0f);
+		windowData->EventCallback(ev);
+		return 0;
+	}
+
+	case WM_LBUTTONDOWN: 
+	{
+		auto ev = Lemon::MouseButtonPressedEvent(MOUSE_BUTTON_LEFT);
+		windowData->EventCallback(ev);
+		return 0;
+	}
+	case WM_RBUTTONDOWN:
+	{
+		auto ev = Lemon::MouseButtonPressedEvent(MOUSE_BUTTON_RIGHT);
+		windowData->EventCallback(ev);
+		return 0;
+	}
+	case WM_MBUTTONDOWN:
+	{
+		auto ev = Lemon::MouseButtonPressedEvent(MOUSE_BUTTON_MIDDLE);
+		windowData->EventCallback(ev);
+		return 0;
+	}
+	case WM_XBUTTONDOWN:
+	{
+		auto btn = HIWORD(wParam) == XBUTTON1 ? MOUSE_BUTTON_4 : MOUSE_BUTTON_5;
+		auto ev = Lemon::MouseButtonPressedEvent(btn);
+		windowData->EventCallback(ev);
+		return 0;
+	}
+
+	case WM_LBUTTONUP:
+	{
+		auto ev = Lemon::MouseButtonReleasedEvent(MOUSE_BUTTON_LEFT);
+		windowData->EventCallback(ev);
+		return 0;
+	}
+	case WM_RBUTTONUP:
+	{
+		auto ev = Lemon::MouseButtonReleasedEvent(MOUSE_BUTTON_RIGHT);
+		windowData->EventCallback(ev);
+		return 0;
+	}
+	case WM_MBUTTONUP:
+	{
+		auto ev = Lemon::MouseButtonReleasedEvent(MOUSE_BUTTON_MIDDLE);
+		windowData->EventCallback(ev);
+		return 0;
+	}
+	case WM_XBUTTONUP:
+	{
+		auto btn = HIWORD(wParam) == XBUTTON1 ? MOUSE_BUTTON_4 : MOUSE_BUTTON_5;
+		auto ev = Lemon::MouseButtonReleasedEvent(btn);
+		windowData->EventCallback(ev);
+		return 0;
+	}
+#pragma endregion
+
+// ========== KEYBOARD EVENTS ===========	
+
+	}
+	return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+

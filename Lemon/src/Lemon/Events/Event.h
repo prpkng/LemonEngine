@@ -2,10 +2,6 @@
 
 #include "Lemon/Core.h"
 
-#include <string>
-#include <sstream>
-#include <functional>
-
 namespace Lemon {
 	enum class EventType {
 		None = 0,
@@ -68,5 +64,9 @@ namespace Lemon {
 
 	inline std::ostream& operator<<(std::ostream& os, const Event& e) {
 		return os << e.ToString();
+	}
+
+	inline std::string format_as(const Event& e) {
+		return e.ToString();
 	}
 }

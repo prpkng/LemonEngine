@@ -2,7 +2,7 @@
 
 #include "Core.h"
 #include <spdlog/spdlog.h>
-#include <memory>
+#include <spdlog/fmt/ostr.h>
 
 namespace Lemon {
 
@@ -24,21 +24,16 @@ namespace Lemon {
 
 }
 
-#ifdef SPDLOG_ACTIVE_LEVEL
-#undef SPDLOG_ACTIVE_LEVEL
-#endif
-
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
 // Core log macros
 
-#define LM_CORE_FATAL(...)     SPDLOG_LOGGER_CRITICAL(::Lemon::Log::Instance().GetCoreLogger(), __VA_ARGS__)
+#define LM_CORE_FATAL(...)     SPDLOG_LOGGER_CRITICAL(::Lemon::Log::Instance().GetCoreLogger(), __VA_ARGS__); __debugbreak()
 #define LM_CORE_ERROR(...)     SPDLOG_LOGGER_ERROR(::Lemon::Log::Instance().GetCoreLogger(), __VA_ARGS__)
 #define LM_CORE_WARN(...)      SPDLOG_LOGGER_WARN(::Lemon::Log::Instance().GetCoreLogger(), __VA_ARGS__)
 #define LM_CORE_INFO(...)      SPDLOG_LOGGER_INFO(::Lemon::Log::Instance().GetCoreLogger(), __VA_ARGS__)
 #define LM_CORE_TRACE(...)     SPDLOG_LOGGER_TRACE(::Lemon::Log::Instance().GetCoreLogger(), __VA_ARGS__)
 // Core log macros
 
-#define LM_FATAL(...)     SPDLOG_LOGGER_CRITICAL(::Lemon::Log::Instance().GetClientLogger(), __VA_ARGS__)
+#define LM_FATAL(...)     SPDLOG_LOGGER_CRITICAL(::Lemon::Log::Instance().GetClientLogger(), __VA_ARGS__); __debugbreak()
 #define LM_ERROR(...)     SPDLOG_LOGGER_ERROR(::Lemon::Log::Instance().GetClientLogger(), __VA_ARGS__)
 #define LM_WARN(...)      SPDLOG_LOGGER_WARN(::Lemon::Log::Instance().GetClientLogger(), __VA_ARGS__)
 #define LM_INFO(...)      SPDLOG_LOGGER_INFO(::Lemon::Log::Instance().GetClientLogger(), __VA_ARGS__)
