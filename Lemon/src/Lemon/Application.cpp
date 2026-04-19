@@ -26,7 +26,11 @@ namespace Lemon {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(OnWindowClose));
 
-		LM_CORE_TRACE("{0}", e.ToString());
+		// Iterate backwards through layer stack, so the foremost layer gets the input events first then the latter
+		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin(); ) {
+			(*--it)->OnEvent(e);
+			if (e.IsHandled()) break;
+		}
 	}
 
 	bool Application::OnWindowClose(WindowCloseEvent& e)
@@ -35,9 +39,20 @@ namespace Lemon {
 		return true;
 	}
 
+	void Application::PushLayer(Layer *layer) {
+		m_LayerStack.PushLayer(layer);
+	}
+
+	void Application::PushOverlay(Layer *overlay) {
+		m_LayerStack.PushOverlay(overlay);
+	}
+
 	void Application::Run()
 	{
 		while (m_Running) {
+			for (auto layer : m_LayerStack)
+				layer->OnUpdate();
+
 			m_Window->OnUpdate();
 		}
 	}

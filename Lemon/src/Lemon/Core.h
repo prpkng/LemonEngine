@@ -14,7 +14,9 @@
 
 #ifdef LM_ENABLE_ASSERTS
 	#define LM_ASSERT(x, ...) { if(!(x)) { LM_ERROR("Assertion Failed: {0}", fmt::format(__VA_ARGS__)); __debugbreak(); } }
-	#define LM_CORE_ASSERT(x, ...) { if(!(x)) { LM_CORE_ERROR("Assertion Failed: {0}", fmt::format(__VA_ARGS__)); __debugbreak(); } }
+	#ifdef LM_BUILD_DLL
+		#define LM_CORE_ASSERT(x, ...) { if(!(x)) { LM_CORE_ERROR("Assertion Failed: {0}", fmt::format(__VA_ARGS__)); __debugbreak(); } }
+	#endif
 #else
 	#define LM_ASSERT(x, ...)
 	#define LM_CORE_ASSERT(x, ...)

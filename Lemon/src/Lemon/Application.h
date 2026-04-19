@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include "LayerStack.h"
 #include "Window.h"
 
 namespace Lemon {
@@ -16,9 +17,13 @@ namespace Lemon {
 		void OnEvent(Event& e);
 
 		bool OnWindowClose(class WindowCloseEvent& e);
+
+		void PushLayer(Layer* layer);
+		void PushOverlay(Layer* overlay);
 	private:
 		std::unique_ptr<Window> m_Window;
 		bool m_Running = true;
+		LayerStack m_LayerStack;
 
 	};
 

@@ -19,7 +19,11 @@ add_library(Lemon SHARED
  "src/Lemon/Events/KeyEvent.h"
  "src/Lemon/Events/MouseEvent.h"
  "src/Platform/WindowsWindow.h"
- "src/Platform/WindowsWindow.cpp")
+ "src/Platform/WindowsWindow.cpp" 
+ "src/Lemon/Layer.h" 
+ "src/Lemon/Layer.cpp"
+        src/Lemon/LayerStack.cpp
+        src/Lemon/LayerStack.h)
 
 target_include_directories(Lemon PUBLIC src/)
 

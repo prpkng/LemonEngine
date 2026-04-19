@@ -1,10 +1,23 @@
 #include <Lemon.h>
 
+class ExampleLayer : public Lemon::Layer {
+public:
+	ExampleLayer() : Layer("Example Layer") {}
+
+	void OnUpdate() override {
+	}
+
+	void OnEvent(Lemon::Event &event) override {
+	}
+};
+
 class Sandbox : public Lemon::Application {
 
 public:
 
-	Sandbox() = default;
+	Sandbox() {
+		PushLayer(new ExampleLayer());
+	}
 	~Sandbox() {}
 };
 
