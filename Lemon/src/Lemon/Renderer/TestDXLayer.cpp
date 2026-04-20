@@ -12,6 +12,9 @@
 #include "SDL3/SDL_properties.h"
 #include "SDL3/SDL_video.h"
 
+using namespace Lemon::RHI;
+using namespace Lemon::DX;
+
 struct Vertex {
     float position[2];
     float color[3];
@@ -184,7 +187,7 @@ void TestDXLayer::InitShaderPipeline(ComPtr<ID3D12Device> device) {
     pixelShader = nullptr;
 }
 
-void TestDXLayer::InitBuffers(const std::unique_ptr<Lemon::DX::DXDevice>& dxDevice) {
+void TestDXLayer::InitBuffers(const std::unique_ptr<DXDevice>& dxDevice) {
     auto device = dxDevice->GetHandle();
     static Vertex quadVertices[] = {
         { { -0.5f,  0.5f }, { 1.0f, 0.0f, 0.0f } }, // v0 (top-left)
@@ -199,23 +202,23 @@ void TestDXLayer::InitBuffers(const std::unique_ptr<Lemon::DX::DXDevice>& dxDevi
 
     vertexBuffer = nullptr;
 
-    Lemon::RHI::Buffer::Desc desc{};
-    desc.memoryUsage = Lemon::RHI::MemoryUsage::CPU_To_GPU;
+    Buffer::Desc desc{};
+    desc.memoryUsage = MemoryUsage::CPU_To_GPU;
     desc.initialData = quadVertices;
     desc.size = sizeof(quadVertices);
-    desc.usage = Lemon::RHI::BufferUsage::Vertex;
+    desc.usage = BufferUsage::Vertex;
 
-    Lemon::RHI::VertexBuffer::Desc vertexDesc {};
+    VertexBuffer::Desc vertexDesc {};
     vertexDesc.bufferDesc = desc;
     vertexDesc.layout = {
-        .elements = std::vector<Lemon::RHI::VertexElement> {
-            {"POSITION", Lemon::RHI::VertexElementType::Float2, 0},
-            {"COLOR", Lemon::RHI::VertexElementType::Float3, Lemon::RHI::GetVertexElementSize(Lemon::RHI::VertexElementType::Float2)},
+        .elements = std::vector<VertexElement> {
+            {"POSITION", VertexElementType::Float2, 0},
+            {"COLOR", VertexElementType::Float3, GetVertexElementSize(VertexElementType::Float2)},
         },
         .stride = sizeof(Vertex)
     };
 
-    vertexBuffer = std::dynamic_pointer_cast<Lemon::DX::DXVertexBuffer>(dxDevice->CreateVertexBuffer(vertexDesc));
+    vertexBuffer = std::dynamic_pointer_cast<DXVertexBuffer>(dxDevice->CreateVertexBuffer(vertexDesc));
     // vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
     // vertexBufferView.SizeInBytes = vBuffer->GetSize();
     // vertexBufferView.StrideInBytes = sizeof(Vertex);
@@ -224,9 +227,9 @@ void TestDXLayer::InitBuffers(const std::unique_ptr<Lemon::DX::DXDevice>& dxDevi
     indexBuffer = nullptr;
     desc.initialData = indices;
     desc.size = sizeof(indices);
-    desc.usage = Lemon::RHI::BufferUsage::Index;
+    desc.usage = BufferUsage::Index;
     auto idxBuffer = dxDevice->CreateBuffer(desc);
-    indexBuffer = static_cast<Lemon::DX::DXBuffer*>(idxBuffer.get())->GetHandle();
+    indexBuffer = static_cast<DXBuffer*>(idxBuffer.get())->GetHandle();
     indexBufferView = {};
     indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
     indexBufferView.SizeInBytes = idxBuffer->GetSize();
@@ -241,12 +244,12 @@ TestDXLayer::TestDXLayer(std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX L
     HWND hwnd = (HWND)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
     LM_CORE_ASSERT(hwnd, "Failed to retrieve HWND from SDL!");
 
-    Lemon::DX::DXDevice::Desc desc {};
+    DXDevice::Desc desc {};
     desc.enableDebugLayer = true;
     desc.initialWidth = window->GetWidth();
     desc.initialHeight = window->GetHeight();
     desc.nativeWindowPtr = hwnd;
-    const auto device = std::make_unique<Lemon::DX::DXDevice>(desc);
+    const auto device = std::make_unique<DXDevice>(desc);
 
     InitCommandQueue(device->m_Handle);
 
