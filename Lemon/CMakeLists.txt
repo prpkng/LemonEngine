@@ -28,6 +28,7 @@ add_library(Lemon SHARED
         src/Lemon/Renderer/TestDXLayer.h)
 
 target_include_directories(Lemon PUBLIC src/)
+target_include_directories(Lemon PRIVATE vendor/dx-headers)
 
 target_precompile_headers(Lemon PRIVATE src/lmpch.h)
 
@@ -38,7 +39,6 @@ target_compile_definitions(Lemon
     PUBLIC $<$<CONFIG:Release>:LM_RELEASE>
     PUBLIC $<$<CONFIG:DIST>:LM_DIST>
 )
-
 target_link_libraries(Lemon PUBLIC
         SDL3::SDL3     # For window handling
         spdlog::spdlog # For logging
