@@ -28,7 +28,13 @@ add_library(Lemon SHARED
         src/Lemon/Renderer/TestDXLayer.h
         src/Lemon/Renderer/Backends/DX/DXDevice.cpp
         src/Lemon/Renderer/Backends/DX/DXDevice.h
-        src/Lemon/Renderer/Backends/DX/DXUtils.h)
+        src/Lemon/Renderer/Backends/DX/DXUtils.h
+        src/Lemon/Renderer/Backends/DX/DXBuffer.cpp
+        src/Lemon/Renderer/Backends/DX/DXBuffer.h
+        src/Lemon/Renderer/Buffer.h
+        src/Lemon/Renderer/VertexBuffer.h
+        src/Lemon/Renderer/Backends/DX/DXVertexBuffer.cpp
+        src/Lemon/Renderer/Backends/DX/DXVertexBuffer.h)
 
 target_include_directories(Lemon PUBLIC src/)
 target_include_directories(Lemon PRIVATE vendor/dx-headers)

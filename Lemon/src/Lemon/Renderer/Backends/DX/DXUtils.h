@@ -2,6 +2,9 @@
 
 #include <lmpch.h>
 
+#include "Lemon/Renderer/Buffer.h"
+#include "Lemon/Renderer/VertexBuffer.h"
+
 
 #define CHECK(x, msg) { HRESULT hr = x; if (FAILED(hr)) { LM_CORE_FATAL("{0}: {1}", msg, HrToString(hr)); abort(); } }
 
@@ -70,4 +73,57 @@ inline std::string HrToString(const HRESULT hr)
     oss << " (0x" << std::hex << hr << ")";
 
     return oss.str();
+}
+
+inline D3D12_HEAP_TYPE TranslateHeapType(Lemon::RHI::MemoryUsage usage)
+{
+    switch (usage)
+    {
+    case Lemon::RHI::MemoryUsage::GPU_ONLY:   return D3D12_HEAP_TYPE_DEFAULT;
+    case Lemon::RHI::MemoryUsage::CPU_To_GPU: return D3D12_HEAP_TYPE_UPLOAD;
+    case Lemon::RHI::MemoryUsage::GPU_To_CPU: return D3D12_HEAP_TYPE_READBACK;
+    }
+    return D3D12_HEAP_TYPE_DEFAULT;
+}
+
+inline D3D12_RESOURCE_STATES TranslateInitialState(Lemon::RHI::MemoryUsage usage)
+{
+    switch (usage)
+    {
+    case Lemon::RHI::MemoryUsage::GPU_ONLY:   return D3D12_RESOURCE_STATE_COMMON;
+    case Lemon::RHI::MemoryUsage::CPU_To_GPU: return D3D12_RESOURCE_STATE_GENERIC_READ;
+    case Lemon::RHI::MemoryUsage::GPU_To_CPU: return D3D12_RESOURCE_STATE_COPY_DEST;
+    }
+    return D3D12_RESOURCE_STATE_COMMON;
+}
+
+inline DXGI_FORMAT TranslateElementType(Lemon::RHI::VertexElementType type)
+{
+    switch (type)
+    {
+    case Lemon::RHI::VertexElementType::Float:  return DXGI_FORMAT_R32_FLOAT;
+    case Lemon::RHI::VertexElementType::Float2: return DXGI_FORMAT_R32G32_FLOAT;
+    case Lemon::RHI::VertexElementType::Float3: return DXGI_FORMAT_R32G32B32_FLOAT;
+    case Lemon::RHI::VertexElementType::Float4: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+    case Lemon::RHI::VertexElementType::Int:  return DXGI_FORMAT_R32_SINT;
+    case Lemon::RHI::VertexElementType::Int2: return DXGI_FORMAT_R32G32_SINT;
+    case Lemon::RHI::VertexElementType::Int3: return DXGI_FORMAT_R32G32B32_SINT;
+    case Lemon::RHI::VertexElementType::Int4: return DXGI_FORMAT_R32G32B32A32_SINT;
+
+    case Lemon::RHI::VertexElementType::Uint:  return DXGI_FORMAT_R32_UINT;
+    case Lemon::RHI::VertexElementType::Uint2: return DXGI_FORMAT_R32G32_UINT;
+    case Lemon::RHI::VertexElementType::Uint3: return DXGI_FORMAT_R32G32B32_UINT;
+    case Lemon::RHI::VertexElementType::Uint4: return DXGI_FORMAT_R32G32B32A32_UINT;
+
+    case Lemon::RHI::VertexElementType::Ubyte4:  return DXGI_FORMAT_R8G8B8A8_UINT;
+    case Lemon::RHI::VertexElementType::Ubyte4N:  return DXGI_FORMAT_R8G8B8A8_UNORM;
+    case Lemon::RHI::VertexElementType::Byte4:  return DXGI_FORMAT_R8G8B8A8_SINT;
+    case Lemon::RHI::VertexElementType::Byte4N:  return DXGI_FORMAT_R8G8B8A8_SNORM;
+
+
+    default:
+        LM_CORE_ERROR("Unknown VertexElementType");
+        return DXGI_FORMAT_UNKNOWN;
+    }
 }

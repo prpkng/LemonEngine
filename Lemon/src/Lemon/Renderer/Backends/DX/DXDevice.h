@@ -2,6 +2,8 @@
 #include <wrl/client.h>
 
 #include "d3d12.h"
+#include "Lemon/Renderer/Buffer.h"
+#include "Lemon/Renderer/VertexBuffer.h"
 
 using Microsoft::WRL::ComPtr;
 
@@ -18,8 +20,13 @@ namespace Lemon::DX
             unsigned int initialWidth, initialHeight;
         };
 
+        std::shared_ptr<RHI::Buffer> CreateBuffer(const RHI::Buffer::Desc& desc);
+        std::shared_ptr<RHI::VertexBuffer> CreateVertexBuffer(const RHI::VertexBuffer::Desc& desc);
+
         DXDevice(const Desc& desc);
         ~DXDevice();
+
+        ComPtr<ID3D12Device> GetHandle() const { return m_Handle; }
 
         ComPtr<ID3D12Device> m_Handle;
     private:

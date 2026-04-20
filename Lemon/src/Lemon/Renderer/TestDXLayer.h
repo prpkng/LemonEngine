@@ -10,6 +10,7 @@
 #include "Lemon/Window.h"
 #include "Platform/WindowsWindow.h"
 #include "Backends/DX/DXDevice.h"
+#include "Backends/DX/DXVertexBuffer.h"
 
 class TestDXLayer : public Lemon::Layer {
 public:
@@ -23,7 +24,7 @@ public:
 
     void InitShaderPipeline(ComPtr<ID3D12Device> device);
 
-    void InitBuffers(ComPtr<ID3D12Device> device);
+    void InitBuffers(const std::unique_ptr<Lemon::DX::DXDevice>& device);
 
     explicit TestDXLayer(std::unique_ptr<Lemon::Window>& wnd);
     ~TestDXLayer() override;
@@ -48,10 +49,9 @@ private:
     UINT64 fenceValue;
     HANDLE fenceEvent;
 
-    ID3D12Resource* vertexBuffer;
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+    std::shared_ptr<Lemon::DX::DXVertexBuffer> vertexBuffer;
 
-    ID3D12Resource* indexBuffer;
+    ComPtr<ID3D12Resource> indexBuffer;
     D3D12_INDEX_BUFFER_VIEW indexBufferView;
 };
 
