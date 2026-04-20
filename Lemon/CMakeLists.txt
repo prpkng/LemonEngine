@@ -31,10 +31,12 @@ add_library(Lemon SHARED
         src/Lemon/Renderer/Backends/DX/DXUtils.h
         src/Lemon/Renderer/Backends/DX/DXBuffer.cpp
         src/Lemon/Renderer/Backends/DX/DXBuffer.h
-        src/Lemon/Renderer/Buffer.h
-        src/Lemon/Renderer/VertexBuffer.h
+        src/Lemon/Renderer/Buffers/Buffer.h
+        src/Lemon/Renderer/Buffers/VertexBuffer.h
         src/Lemon/Renderer/Backends/DX/DXVertexBuffer.cpp
-        src/Lemon/Renderer/Backends/DX/DXVertexBuffer.h)
+        src/Lemon/Renderer/Backends/DX/DXVertexBuffer.h
+        src/Lemon/Renderer/Helpers/VertexLayoutBuilder.h
+        src/Lemon/Renderer/Helpers/VertexLayoutBuilder.cpp)
 
 target_include_directories(Lemon PUBLIC src/)
 target_include_directories(Lemon PRIVATE vendor/dx-headers)

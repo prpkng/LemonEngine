@@ -2,8 +2,8 @@
 #include <wrl/client.h>
 
 #include "d3d12.h"
-#include "Lemon/Renderer/Buffer.h"
-#include "Lemon/Renderer/VertexBuffer.h"
+#include "../../Buffers/Buffer.h"
+#include "../../Buffers/VertexBuffer.h"
 
 using Microsoft::WRL::ComPtr;
 

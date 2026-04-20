@@ -8,9 +8,12 @@
 #include "Backends/DX/DXBuffer.h"
 #include "Backends/DX/DXDevice.h"
 #include "Backends/DX/DXUtils.h"
+#include "Helpers/VertexLayoutBuilder.h"
 #include "Platform/WindowsWindow.h"
 #include "SDL3/SDL_properties.h"
 #include "SDL3/SDL_video.h"
+#include <cmath>
+#include <numbers>
 
 using namespace Lemon::RHI;
 using namespace Lemon::DX;
@@ -18,6 +21,12 @@ using namespace Lemon::DX;
 struct Vertex {
     float position[2];
     float color[3];
+
+
+     std::string ToString() const {
+        return fmt::format("pos: {0:.2f}x{1:.2f} color: R:{2} G:{3} B:{4}", position[0], position[1],
+            color[0], color[1], color[2]);
+    }
 };
 
 void logHRError(HRESULT hr, std::string_view msg) {
@@ -158,6 +167,7 @@ void TestDXLayer::InitShaderPipeline(ComPtr<ID3D12Device> device) {
     psoDesc.SampleMask = UINT_MAX;
 
     psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+    // psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
     psoDesc.BlendState      = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 
@@ -187,46 +197,56 @@ void TestDXLayer::InitShaderPipeline(ComPtr<ID3D12Device> device) {
     pixelShader = nullptr;
 }
 
+constexpr int SIDE_COUNT = 6;
+
 void TestDXLayer::InitBuffers(const std::unique_ptr<DXDevice>& dxDevice) {
     auto device = dxDevice->GetHandle();
-    static Vertex quadVertices[] = {
-        { { -0.5f,  0.5f }, { 1.0f, 0.0f, 0.0f } }, // v0 (top-left)
-        { {  0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f } }, // v1 (top-right)
-        { { -0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f } }, // v2 (bottom-left)
-        { {  0.5f, -0.5f }, { 1.0f, 1.0f, 0.0f } }  // v3 (bottom-right)
-    };
-    static uint16_t indices[] = {
-        0, 1, 2,   // first triangle
-        2, 1, 3    // second triangle
-    };
+
+    std::vector<Vertex> vertices ={};
+    vertices.push_back({{0.0f, 0.0f}, {0.25f, 0.25f, 0.25f}});
+    std::vector<uint16_t> indices = {};
+    const float incr = 2 * std::numbers::pi_v<float> / SIDE_COUNT;
+    for (int i = 0; i < SIDE_COUNT; i++)
+    {
+        Vertex vertex = {
+            { cosf(incr * i)/1.5f, sinf(incr * i)/1.5f },
+            {1.0f, 1.0f, 1.0f}
+        };
+        vertices.push_back(vertex);
+        int next = i+1;
+        if (next >= SIDE_COUNT) next = 0;
+        indices.push_back(i+1);
+        indices.push_back(0);
+        indices.push_back(next+1);
+    }
+
+
+    for (auto vert : vertices)
+        LM_CORE_INFO("Vertex {0}", vert.ToString());
+    for (auto ind : indices)
+        LM_CORE_INFO("Index {0}", ind);
 
     vertexBuffer = nullptr;
 
     Buffer::Desc desc{};
     desc.memoryUsage = MemoryUsage::CPU_To_GPU;
-    desc.initialData = quadVertices;
-    desc.size = sizeof(quadVertices);
+    desc.initialData = vertices.data();
+    desc.size = vertices.size() * sizeof(Vertex);
     desc.usage = BufferUsage::Vertex;
 
     VertexBuffer::Desc vertexDesc {};
     vertexDesc.bufferDesc = desc;
-    vertexDesc.layout = {
-        .elements = std::vector<VertexElement> {
-            {"POSITION", VertexElementType::Float2, 0},
-            {"COLOR", VertexElementType::Float3, GetVertexElementSize(VertexElementType::Float2)},
-        },
-        .stride = sizeof(Vertex)
-    };
+    vertexDesc.layout = VertexLayoutBuilder()
+                    .WithElement("POSITION", VertexElementType::Float2)
+                    .WithElement("COLOR", VertexElementType::Float3)
+                    .Build();
 
     vertexBuffer = std::dynamic_pointer_cast<DXVertexBuffer>(dxDevice->CreateVertexBuffer(vertexDesc));
-    // vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-    // vertexBufferView.SizeInBytes = vBuffer->GetSize();
-    // vertexBufferView.StrideInBytes = sizeof(Vertex);
 
 
     indexBuffer = nullptr;
-    desc.initialData = indices;
-    desc.size = sizeof(indices);
+    desc.initialData = indices.data();
+    desc.size = indices.size() * sizeof(uint16_t);
     desc.usage = BufferUsage::Index;
     auto idxBuffer = dxDevice->CreateBuffer(desc);
     indexBuffer = static_cast<DXBuffer*>(idxBuffer.get())->GetHandle();
@@ -309,7 +329,7 @@ void TestDXLayer::OnUpdate() {
     commandList->SetGraphicsRoot32BitConstant(0, triangleAngle, 0);
     commandList->IASetVertexBuffers(0, 1, vertexBuffer->GetBufferView());
     commandList->IASetIndexBuffer(&indexBufferView);
-    commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+    commandList->DrawIndexedInstanced(SIDE_COUNT*3, 1, 0, 0, 0);
 
     {
         D3D12_RESOURCE_BARRIER barrier = {};
