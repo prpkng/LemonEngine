@@ -5,6 +5,8 @@
 #include <dxgi1_4.h>
 #include <d3dcompiler.h>
 
+#include "Backends/DX/DXDevice.h"
+#include "Backends/DX/DXUtils.h"
 #include "Platform/WindowsWindow.h"
 #include "SDL3/SDL_properties.h"
 #include "SDL3/SDL_video.h"
@@ -19,36 +21,29 @@ void logHRError(HRESULT hr, std::string_view msg) {
     LM_CORE_FATAL("{0}: ERROR {1}", msg, errorMsg);
 }
 
-ID3D12Device * TestDXLayer::InitDevice() {
-    // Create a rendering device
-    ID3D12Device* device = nullptr;
-    ThrowIfFailed(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device)), "Failed to create device");
-    return device;
-}
-
-void TestDXLayer::InitCommandQueue(ID3D12Device *device) {
+void TestDXLayer::InitCommandQueue(ComPtr<ID3D12Device> device) {
     // The command queue decides which order the command lists should execute. In our case, only one command list exists.
     commandQueue = nullptr;
     D3D12_COMMAND_QUEUE_DESC queueDesc = {};
     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
     queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    ThrowIfFailed(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue)), "Failed to create command queue");
+    CHECK(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue)), "Failed to create command queue");
 
     // The command allocator is used to allocate memory on the GPU for commands
     commandAllocator = nullptr;
-    ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)), "Failed to create command allocator");
-    ThrowIfFailed(commandAllocator->Reset(), "Failed to reset command allocator");
+    CHECK(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)), "Failed to create command allocator");
+    CHECK(commandAllocator->Reset(), "Failed to reset command allocator");
 
     // The command list is used to store a list of commands we wish to execute on the GPU
     commandList = nullptr;
-    ThrowIfFailed(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, nullptr, IID_PPV_ARGS(&commandList)), "Failed to create command list");
-    ThrowIfFailed(commandList->Close(), "Failed to close command list");
+    CHECK(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, nullptr, IID_PPV_ARGS(&commandList)), "Failed to create command list");
+    CHECK(commandList->Close(), "Failed to close command list");
 }
 
 void TestDXLayer::InitSwapchain(HWND hwnd) {
     // Helper factory to create the swap chain
     IDXGIFactory4* factory = nullptr;
-    ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&factory)), "Failed to create DXGI factory");
+    CHECK(CreateDXGIFactory1(IID_PPV_ARGS(&factory)), "Failed to create DXGI factory");
 
     // Create the swap chain
     DXGI_SWAP_CHAIN_DESC swapChainDesc = {
@@ -66,28 +61,28 @@ void TestDXLayer::InitSwapchain(HWND hwnd) {
     };
 
     IDXGISwapChain* tempSwapChain = nullptr;
-    ThrowIfFailed(factory->CreateSwapChain(commandQueue, &swapChainDesc, &tempSwapChain), "Failed to create swap chain");
+    CHECK(factory->CreateSwapChain(commandQueue, &swapChainDesc, &tempSwapChain), "Failed to create swap chain");
 
     // Cast swap chain to IDXGISwapChain3 to leverage the lastest features
     swapChain = {};
-    ThrowIfFailed(tempSwapChain->QueryInterface(IID_PPV_ARGS(&swapChain)), "Failed to cast swap chain");
+    CHECK(tempSwapChain->QueryInterface(IID_PPV_ARGS(&swapChain)), "Failed to cast swap chain");
     tempSwapChain->Release();
     tempSwapChain = nullptr;
 }
 
-void TestDXLayer::InitRenderTargets(ID3D12Device *device) {
+void TestDXLayer::InitRenderTargets(ComPtr<ID3D12Device> device) {
     // Memory descriptor heap to store render target views (RTV). Descriptor describes how to interperate resource memory
     rtvHeap = nullptr;
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
     rtvHeapDesc.NumDescriptors = 2;
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    ThrowIfFailed(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)), "Failed to create descriptor heap");
+    CHECK(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)), "Failed to create descriptor heap");
 
     rtvIncrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     {
         D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
         for (UINT i = 0; i < 2; i++) {
-            ThrowIfFailed(swapChain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i])), "Failed to get swapchain buffer");
+            CHECK(swapChain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i])), "Failed to get swapchain buffer");
 
             device->CreateRenderTargetView(renderTargets[i], nullptr, rtvHandle);
             rtvHandle.ptr += rtvIncrementSize;
@@ -95,16 +90,16 @@ void TestDXLayer::InitRenderTargets(ID3D12Device *device) {
     }
 }
 
-void TestDXLayer::InitSync(ID3D12Device *device) {
+void TestDXLayer::InitSync(ComPtr<ID3D12Device> device) {
     // Fence is used to synchronize the CPU with the GPU, so they don't touch the same memory at the same time
     fence = nullptr;
     fenceValue = 0;
-    ThrowIfFailed(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)), "Failed to create fence");
+    CHECK(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)), "Failed to create fence");
 
     fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }
 
-void TestDXLayer::InitShaderPipeline(ID3D12Device *device) {
+void TestDXLayer::InitShaderPipeline(ComPtr<ID3D12Device> device) {
     //Root signature is like have many object buffers and textures we want to use when drawing.
     //For our rotating triangle, we only need a single constant that is going to be our angle
 
@@ -126,8 +121,8 @@ void TestDXLayer::InitShaderPipeline(ID3D12Device *device) {
 
     ID3DBlob* signatureBlob = nullptr;
     ID3DBlob* errorBlob = nullptr;
-    ThrowIfFailed(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob), "Failed to serialize root signature");
-    ThrowIfFailed(device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)), "Failed to create root signature");
+    CHECK(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob), "Failed to serialize root signature");
+    CHECK(device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)), "Failed to create root signature");
 
     if (signatureBlob) {
         signatureBlob->Release();
@@ -141,9 +136,9 @@ void TestDXLayer::InitShaderPipeline(ID3D12Device *device) {
 
     ID3DBlob* vertexShader = nullptr;
     ID3DBlob* pixelShader = nullptr;
-    ThrowIfFailed(D3DCompileFromFile(L"shader.hlsl", nullptr, nullptr, "VSMain",
+    CHECK(D3DCompileFromFile(L"shader.hlsl", nullptr, nullptr, "VSMain",
                                      "vs_5_0", 0, 0, &vertexShader, nullptr), "Failed to compile vertex shader");
-    ThrowIfFailed(D3DCompileFromFile(L"shader.hlsl", nullptr, nullptr, "PSMain", "ps_5_0",
+    CHECK(D3DCompileFromFile(L"shader.hlsl", nullptr, nullptr, "PSMain", "ps_5_0",
                                      0, 0, &pixelShader, nullptr), "Failed to compile pixel shader");
 
     // Pipeline state
@@ -180,7 +175,7 @@ void TestDXLayer::InitShaderPipeline(ID3D12Device *device) {
     psoDesc.SampleDesc.Quality = 0;
 
     pipelineState = nullptr;
-    ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)), "Failed to create pipeline state");
+    CHECK(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)), "Failed to create pipeline state");
 
     vertexShader->Release();
     vertexShader = nullptr;
@@ -188,7 +183,7 @@ void TestDXLayer::InitShaderPipeline(ID3D12Device *device) {
     pixelShader = nullptr;
 }
 
-void TestDXLayer::InitBuffers(ID3D12Device *device) {
+void TestDXLayer::InitBuffers(ComPtr<ID3D12Device> device) {
     static Vertex quadVertices[] = {
         { { -0.5f,  0.5f }, { 1.0f, 0.0f, 0.0f } }, // v0 (top-left)
         { {  0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f } }, // v1 (top-right)
@@ -215,7 +210,7 @@ void TestDXLayer::InitBuffers(ID3D12Device *device) {
     resourceDesc.SampleDesc.Count = 1;
     resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-    ThrowIfFailed(device->CreateCommittedResource(
+    CHECK(device->CreateCommittedResource(
                       &heapProps,
                       D3D12_HEAP_FLAG_NONE,
                       &resourceDesc,
@@ -253,7 +248,7 @@ void TestDXLayer::InitBuffers(ID3D12Device *device) {
     resourceDesc.SampleDesc.Count = 1;
     resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-    ThrowIfFailed(device->CreateCommittedResource(
+    CHECK(device->CreateCommittedResource(
                       &heapProps,
                       D3D12_HEAP_FLAG_NONE,
                       &resourceDesc,
@@ -283,19 +278,24 @@ TestDXLayer::TestDXLayer(std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX L
     HWND hwnd = (HWND)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
     LM_CORE_ASSERT(hwnd, "Failed to retrieve HWND from SDL!");
 
-    ID3D12Device *device = InitDevice();
+    Lemon::DX::DXDevice::Desc desc {};
+    desc.enableDebugLayer = true;
+    desc.initialWidth = window->GetWidth();
+    desc.initialHeight = window->GetHeight();
+    desc.nativeWindowPtr = hwnd;
+    const auto device = std::make_unique<Lemon::DX::DXDevice>(desc);
 
-    InitCommandQueue(device);
+    InitCommandQueue(device->m_Handle);
 
     InitSwapchain(hwnd);
 
-    InitRenderTargets(device);
+    InitRenderTargets(device->m_Handle);
 
-    InitSync(device);
+    InitSync(device->m_Handle);
 
-    InitShaderPipeline(device);
+    InitShaderPipeline(device->m_Handle);
 
-    InitBuffers(device);
+    InitBuffers(device->m_Handle);
 }
 
 TestDXLayer::~TestDXLayer() {
@@ -304,10 +304,10 @@ TestDXLayer::~TestDXLayer() {
 void TestDXLayer::OnUpdate() {
     static UINT triangleAngle = 0;
 
-    ThrowIfFailed(commandAllocator->Reset(), "Failed to reset command allocator");
+    CHECK(commandAllocator->Reset(), "Failed to reset command allocator");
 
     // Record commands to draw a triangle
-    ThrowIfFailed(commandList->Reset(commandAllocator, nullptr), "Failed to reset command list");
+    CHECK(commandList->Reset(commandAllocator, nullptr), "Failed to reset command list");
 
     UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
@@ -356,19 +356,19 @@ void TestDXLayer::OnUpdate() {
         commandList->ResourceBarrier(1, &barrier);
     }
 
-    ThrowIfFailed(commandList->Close(), "Failed to close command list");
+    CHECK(commandList->Close(), "Failed to close command list");
 
     ID3D12CommandList* commandLists[] = { commandList };
     commandQueue->ExecuteCommandLists(1, commandLists);
 
-    ThrowIfFailed(swapChain->Present(1, 0), "Failed to present swap chain");
+    CHECK(swapChain->Present(1, 0), "Failed to present swap chain");
 
     //Wait on the CPU for the GPU frame to finish
     const UINT64 currentFenceValue = ++fenceValue;
-    ThrowIfFailed(commandQueue->Signal(fence, currentFenceValue), "Failed to signal the fence");
+    CHECK(commandQueue->Signal(fence, currentFenceValue), "Failed to signal the fence");
 
     if (fence->GetCompletedValue() < currentFenceValue) {
-        ThrowIfFailed(fence->SetEventOnCompletion(currentFenceValue, fenceEvent), "Failed to set fence completion");
+        CHECK(fence->SetEventOnCompletion(currentFenceValue, fenceEvent), "Failed to set fence completion");
         WaitForSingleObject(fenceEvent, INFINITE);
     }
 

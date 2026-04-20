@@ -25,7 +25,10 @@ add_library(Lemon SHARED
         src/Lemon/LayerStack.cpp
         src/Lemon/LayerStack.h
         src/Lemon/Renderer/TestDXLayer.cpp
-        src/Lemon/Renderer/TestDXLayer.h)
+        src/Lemon/Renderer/TestDXLayer.h
+        src/Lemon/Renderer/Backends/DX/DXDevice.cpp
+        src/Lemon/Renderer/Backends/DX/DXDevice.h
+        src/Lemon/Renderer/Backends/DX/DXUtils.h)
 
 target_include_directories(Lemon PUBLIC src/)
 target_include_directories(Lemon PRIVATE vendor/dx-headers)
