@@ -248,12 +248,14 @@ void TestDXLayer::InitBuffers(const std::unique_ptr<DXDevice>& dxDevice) {
     desc.initialData = indices.data();
     desc.size = indices.size() * sizeof(uint16_t);
     desc.usage = BufferUsage::Index;
+
+    IndexBuffer::Desc indexDesc = {
+        .bufferDesc = desc,
+        .indexType = VertexElementType::Ushort,
+    };
+
     auto idxBuffer = dxDevice->CreateBuffer(desc);
-    indexBuffer = static_cast<DXBuffer*>(idxBuffer.get())->GetHandle();
-    indexBufferView = {};
-    indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
-    indexBufferView.SizeInBytes = idxBuffer->GetSize();
-    indexBufferView.Format = DXGI_FORMAT_R16_UINT; // because uint16_t
+    indexBuffer = std::dynamic_pointer_cast<DXIndexBuffer>(dxDevice->CreateIndexBuffer(indexDesc));
 }
 
 TestDXLayer::TestDXLayer(std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX Layer") {
@@ -328,7 +330,7 @@ void TestDXLayer::OnUpdate() {
 
     commandList->SetGraphicsRoot32BitConstant(0, triangleAngle, 0);
     commandList->IASetVertexBuffers(0, 1, vertexBuffer->GetBufferView());
-    commandList->IASetIndexBuffer(&indexBufferView);
+    commandList->IASetIndexBuffer(indexBuffer->GetBufferView());
     commandList->DrawIndexedInstanced(SIDE_COUNT*3, 1, 0, 0, 0);
 
     {

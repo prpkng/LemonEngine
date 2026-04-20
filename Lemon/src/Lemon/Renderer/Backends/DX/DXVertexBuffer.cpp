@@ -4,19 +4,16 @@
 
 #include "DXVertexBuffer.h"
 
-namespace Lemon
+namespace Lemon::DX
 {
-    namespace DX
+    DXVertexBuffer::DXVertexBuffer(DXDevice* device, const Desc& desc) : VertexBuffer(desc)
     {
-        DXVertexBuffer::DXVertexBuffer(DXDevice* device, const Desc& desc) : VertexBuffer(desc)
-        {
-            m_Buffer = device->CreateBuffer(desc.bufferDesc);
+        m_Buffer = device->CreateBuffer(desc.bufferDesc);
 
-            auto bufferAsDX = std::dynamic_pointer_cast<DXBuffer>(m_Buffer);
-            m_VertexBufferView = {};
-            m_VertexBufferView.BufferLocation = bufferAsDX->GetVirtualAddress();
-            m_VertexBufferView.SizeInBytes = m_Buffer->GetSize();
-            m_VertexBufferView.StrideInBytes = desc.layout.stride;
-        }
-    } // DX
+        auto bufferAsDX = std::dynamic_pointer_cast<DXBuffer>(m_Buffer);
+        m_VertexBufferView = {};
+        m_VertexBufferView.BufferLocation = bufferAsDX->GetVirtualAddress();
+        m_VertexBufferView.SizeInBytes = m_Buffer->GetSize();
+        m_VertexBufferView.StrideInBytes = desc.layout.stride;
+    }
 } // Lemon

@@ -13,6 +13,7 @@ namespace Lemon::RHI
         Int, Int2, Int3, Int4,
         Uint, Uint2, Uint3, Uint4,
         Byte4, Byte4N, Ubyte4, Ubyte4N,
+        Ushort, Ushort2, Ushort4,
         Short2, Short2N,
         Short4, Short4N,
     };

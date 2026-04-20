@@ -2,6 +2,7 @@
 #include "DXDevice.h"
 
 #include "DXBuffer.h"
+#include "DXIndexBuffer.h"
 #include "DXUtils.h"
 #include "DXVertexBuffer.h"
 
@@ -15,6 +16,11 @@ namespace Lemon::DX
     std::shared_ptr<RHI::VertexBuffer> DXDevice::CreateVertexBuffer(const RHI::VertexBuffer::Desc& desc)
     {
         return std::make_shared<DXVertexBuffer>(this, desc);
+    }
+
+    std::shared_ptr<RHI::IndexBuffer> DXDevice::CreateIndexBuffer(const RHI::IndexBuffer::Desc& desc)
+    {
+        return std::make_shared<DXIndexBuffer>(this, desc);
     }
 
     DXDevice::DXDevice(const Desc& desc)

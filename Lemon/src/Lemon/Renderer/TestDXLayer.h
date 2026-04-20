@@ -10,6 +10,7 @@
 #include "Lemon/Window.h"
 #include "Platform/WindowsWindow.h"
 #include "Backends/DX/DXDevice.h"
+#include "Backends/DX/DXIndexBuffer.h"
 #include "Backends/DX/DXVertexBuffer.h"
 
 class TestDXLayer : public Lemon::Layer {
@@ -51,8 +52,7 @@ private:
 
     std::shared_ptr<Lemon::DX::DXVertexBuffer> vertexBuffer;
 
-    ComPtr<ID3D12Resource> indexBuffer;
-    D3D12_INDEX_BUFFER_VIEW indexBufferView;
+    std::shared_ptr<Lemon::DX::DXIndexBuffer> indexBuffer;
 };
 
 
