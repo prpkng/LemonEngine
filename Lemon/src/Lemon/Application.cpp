@@ -4,6 +4,7 @@
 #include "Events/Event.h"
 #include "Events/ApplicationEvent.h"
 #include "Log.h"
+#include "Renderer/TestDXLayer.h"
 
 namespace Lemon {
 	
@@ -14,6 +15,8 @@ namespace Lemon {
 		LM_CORE_INFO("Starting application...");
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		m_Window->SetEventCallback(BIND_EVENT_FN(OnEvent));
+
+		PushLayer(new TestDXLayer(m_Window));
 	}
 	
 	Application::~Application()

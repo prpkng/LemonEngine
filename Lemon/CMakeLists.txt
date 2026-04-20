@@ -23,7 +23,9 @@ add_library(Lemon SHARED
  "src/Lemon/Layer.h" 
  "src/Lemon/Layer.cpp"
         src/Lemon/LayerStack.cpp
-        src/Lemon/LayerStack.h)
+        src/Lemon/LayerStack.h
+        src/Lemon/Renderer/TestDXLayer.cpp
+        src/Lemon/Renderer/TestDXLayer.h)
 
 target_include_directories(Lemon PUBLIC src/)
 
@@ -37,4 +39,16 @@ target_compile_definitions(Lemon
     PUBLIC $<$<CONFIG:DIST>:LM_DIST>
 )
 
-target_link_libraries(Lemon PUBLIC SDL3::SDL3 spdlog::spdlog)
+target_link_libraries(Lemon PUBLIC
+        SDL3::SDL3     # For window handling
+        spdlog::spdlog # For logging
+        d3d12          # DirectX 12
+        dxgi           # DirectX Graphics Infrastructure
+        d3dcompiler    # DirectX shader compilation
+)
+
+
+add_custom_command(TARGET Lemon POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/Lemon.dll ${CMAKE_BINARY_DIR}/Sandbox
+        COMMAND_EXPAND_LISTS
+)

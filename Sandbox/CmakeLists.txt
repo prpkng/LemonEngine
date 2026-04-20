@@ -6,8 +6,3 @@ add_executable(Sandbox $<$<CONFIG:Dist>:WIN32>
 )
 
 target_link_libraries(Sandbox PRIVATE Lemon)
-
-add_custom_command(TARGET Sandbox POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:Sandbox> $<TARGET_FILE_DIR:Sandbox>
-    COMMAND_EXPAND_LISTS
-)

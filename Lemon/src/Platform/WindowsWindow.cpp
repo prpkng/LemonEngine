@@ -14,7 +14,7 @@ namespace Lemon {
 	}
 	WindowsWindow::WindowsWindow(const WindowProps& props)
 	{
-		Init(props);
+		WindowsWindow::Init(props);
 	}
 
 	void WindowsWindow::Init(const WindowProps& props)
@@ -44,7 +44,7 @@ namespace Lemon {
 
 	WindowsWindow::~WindowsWindow()
 	{
-		Shutdown();
+		WindowsWindow::Shutdown();
 	}
 
 	void WindowsWindow::OnUpdate()

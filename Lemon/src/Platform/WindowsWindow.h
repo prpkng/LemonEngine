@@ -31,11 +31,11 @@ namespace Lemon {
 			EventCallbackFn EventCallback;
 		};
 
+		SDL_Window* m_Handle;
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
-		
-		SDL_Window* m_Handle;
+
 		WindowData m_Data;
 	};
 }
