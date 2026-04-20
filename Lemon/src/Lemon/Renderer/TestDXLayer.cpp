@@ -289,7 +289,7 @@ TestDXLayer::TestDXLayer(std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX L
     setRasterizerState(psoDesc.RasterizerState);
     setDepthStencilState(psoDesc.DepthStencilState);
 
-    D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+    static D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
         { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 8, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
     };
@@ -314,19 +314,19 @@ TestDXLayer::TestDXLayer(std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX L
     pixelShader->Release();
     pixelShader = nullptr;
 
-    Vertex quadVertices[] = {
+    static Vertex quadVertices[] = {
         { { -0.5f,  0.5f }, { 1.0f, 0.0f, 0.0f } }, // v0 (top-left)
         { {  0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f } }, // v1 (top-right)
         { { -0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f } }, // v2 (bottom-left)
         { {  0.5f, -0.5f }, { 1.0f, 1.0f, 0.0f } }  // v3 (bottom-right)
     };
-    uint16_t indices[] = {
+    static uint16_t indices[] = {
         0, 1, 2,   // first triangle
         2, 1, 3    // second triangle
     };
 
     vertexBuffer = nullptr;
-    constexpr UINT vertexBufferSize = _countof(quadVertices);
+    constexpr UINT vertexBufferSize = sizeof(quadVertices);
 
     D3D12_HEAP_PROPERTIES heapProps = {};
     heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -445,7 +445,7 @@ void TestDXLayer::OnUpdate() {
     commandList->SetGraphicsRoot32BitConstant(0, triangleAngle, 0);
     commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
     commandList->IASetIndexBuffer(&indexBufferView);
-    commandList->DrawInstanced(6, 1, 0, 0);
+    commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
     {
         D3D12_RESOURCE_BARRIER barrier = {};
