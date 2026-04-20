@@ -11,6 +11,11 @@
 
 #define CHECK(x, msg) {HRESULT hr = x; if (hr != S_OK) logHRError(hr, msg); }
 
+struct Vertex {
+    float position[2];
+    float color[3];
+};
+
 std::string HrToString(HRESULT hr)
 {
     switch (hr)
@@ -208,8 +213,6 @@ TestDXLayer::TestDXLayer(std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX L
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     CHECK(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)), "Failed to create descriptor heap");
 
-    renderTargets[2];
-
     rtvIncrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     {
         D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
@@ -286,8 +289,13 @@ TestDXLayer::TestDXLayer(std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX L
     setRasterizerState(psoDesc.RasterizerState);
     setDepthStencilState(psoDesc.DepthStencilState);
 
-    psoDesc.InputLayout.pInputElementDescs = nullptr;
-    psoDesc.InputLayout.NumElements = 0;
+    D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+        { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        { "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 8, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+    };
+
+    psoDesc.InputLayout.pInputElementDescs = inputLayout;
+    psoDesc.InputLayout.NumElements = _countof(inputLayout);
 
     psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
     psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
@@ -306,7 +314,90 @@ TestDXLayer::TestDXLayer(std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX L
     pixelShader->Release();
     pixelShader = nullptr;
 
+    Vertex quadVertices[] = {
+        { { -0.5f,  0.5f }, { 1.0f, 0.0f, 0.0f } }, // v0 (top-left)
+        { {  0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f } }, // v1 (top-right)
+        { { -0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f } }, // v2 (bottom-left)
+        { {  0.5f, -0.5f }, { 1.0f, 1.0f, 0.0f } }  // v3 (bottom-right)
+    };
+    uint16_t indices[] = {
+        0, 1, 2,   // first triangle
+        2, 1, 3    // second triangle
+    };
 
+    vertexBuffer = nullptr;
+    constexpr UINT vertexBufferSize = _countof(quadVertices);
+
+    D3D12_HEAP_PROPERTIES heapProps = {};
+    heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+    D3D12_RESOURCE_DESC resourceDesc = {};
+    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resourceDesc.Width = vertexBufferSize;
+    resourceDesc.Height = 1;
+    resourceDesc.DepthOrArraySize = 1;
+    resourceDesc.MipLevels = 1;
+    resourceDesc.SampleDesc.Count = 1;
+    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    CHECK(device->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &resourceDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&vertexBuffer)
+    ), "Failed to create vertex buffer");
+
+    void* pData = nullptr;
+    D3D12_RANGE readRange = {0, 0}; // We won't read from it
+
+    vertexBuffer->Map(0, &readRange, &pData);
+    memcpy(pData, quadVertices, sizeof(quadVertices));
+    vertexBuffer->Unmap(0, nullptr);
+
+    vertexBufferView = {};
+    vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+    vertexBufferView.SizeInBytes = vertexBufferSize;
+    vertexBufferView.StrideInBytes = sizeof(Vertex);
+
+
+    indexBuffer = nullptr;
+
+    const UINT indexBufferSize = sizeof(indices);
+
+    heapProps = {};
+    heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+    resourceDesc = {};
+    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resourceDesc.Width = indexBufferSize;
+    resourceDesc.Height = 1;
+    resourceDesc.DepthOrArraySize = 1;
+    resourceDesc.MipLevels = 1;
+    resourceDesc.SampleDesc.Count = 1;
+    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    CHECK(device->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &resourceDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&indexBuffer)
+    ), "Failed to create index buffer");
+
+    pData = nullptr;
+    readRange = {0, 0};
+
+    indexBuffer->Map(0, &readRange, &pData);
+    memcpy(pData, indices, sizeof(indices));
+    indexBuffer->Unmap(0, nullptr);
+
+    indexBufferView = {};
+    indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+    indexBufferView.SizeInBytes = indexBufferSize;
+    indexBufferView.Format = DXGI_FORMAT_R16_UINT; // because uint16_t
 }
 
 TestDXLayer::~TestDXLayer() {
@@ -352,7 +443,9 @@ void TestDXLayer::OnUpdate() {
     commandList->SetPipelineState(pipelineState);
 
     commandList->SetGraphicsRoot32BitConstant(0, triangleAngle, 0);
-    commandList->DrawInstanced(3, 1, 0, 0);
+    commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+    commandList->IASetIndexBuffer(&indexBufferView);
+    commandList->DrawInstanced(6, 1, 0, 0);
 
     {
         D3D12_RESOURCE_BARRIER barrier = {};

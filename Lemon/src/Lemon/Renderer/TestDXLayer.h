@@ -33,6 +33,12 @@ private:
     ID3D12Fence* fence;
     UINT64 fenceValue;
     HANDLE fenceEvent;
+
+    ID3D12Resource* vertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+
+    ID3D12Resource* indexBuffer;
+    D3D12_INDEX_BUFFER_VIEW indexBufferView;
 };
 
 
