@@ -18,6 +18,7 @@
 #include "Backends/DX/Pipelines/DXPipeline.h"
 #include "Backends/DX/API/DXPSO.h"
 #include "Backends/DX/API/Helpers.h"
+#include "Backends/DX/Commands/DXCommandList.h"
 
 
 using namespace Lemon::RHI;
@@ -41,21 +42,21 @@ void logHRError(HRESULT hr, std::string_view msg) {
 
 void TestDXLayer::InitCommandQueue(ComPtr<ID3D12Device> device) {
     // The command queue decides which order the command lists should execute. In our case, only one command list exists.
-    commandQueue = nullptr;
-    D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-    queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-    queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    CHECK(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue)), "Failed to create command queue");
-
-    // The command allocator is used to allocate memory on the GPU for commands
-    commandAllocator = nullptr;
-    CHECK(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)), "Failed to create command allocator");
-    CHECK(commandAllocator->Reset(), "Failed to reset command allocator");
-
-    // The command list is used to store a list of commands we wish to execute on the GPU
-    commandList = nullptr;
-    CHECK(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, nullptr, IID_PPV_ARGS(&commandList)), "Failed to create command list");
-    CHECK(commandList->Close(), "Failed to close command list");
+    // commandQueue = nullptr;
+    // D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+    // queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    // queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+    // CHECK(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue)), "Failed to create command queue");
+    //
+    // // The command allocator is used to allocate memory on the GPU for commands
+    // commandAllocator = nullptr;
+    // CHECK(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)), "Failed to create command allocator");
+    // CHECK(commandAllocator->Reset(), "Failed to reset command allocator");
+    //
+    // // The command list is used to store a list of commands we wish to execute on the GPU
+    // commandList = nullptr;
+    // CHECK(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, nullptr, IID_PPV_ARGS(&commandList)), "Failed to create command list");
+    // CHECK(commandList->Close(), "Failed to close command list");
 }
 
 void TestDXLayer::InitSwapchain(HWND hwnd) {
@@ -79,7 +80,7 @@ void TestDXLayer::InitSwapchain(HWND hwnd) {
     };
 
     IDXGISwapChain* tempSwapChain = nullptr;
-    CHECK(factory->CreateSwapChain(commandQueue, &swapChainDesc, &tempSwapChain), "Failed to create swap chain");
+    CHECK(factory->CreateSwapChain(graphicsQueue->GetHandle().Get(), &swapChainDesc, &tempSwapChain), "Failed to create swap chain");
 
     // Cast swap chain to IDXGISwapChain3 to leverage the lastest features
     swapChain = {};
@@ -201,13 +202,15 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
     desc.nativeWindowPtr = hwnd;
     const auto device = std::make_shared<DXDevice>(desc);
 
-    InitCommandQueue(device->m_Handle);
+    graphicsQueue = std::dynamic_pointer_cast<DXCommandQueue>(device->CreateCommandQueue(QueueType::Graphics));
+
+    // InitCommandQueue(device->m_Handle);
 
     InitSwapchain(hwnd);
 
     InitRenderTargets(device->m_Handle);
 
-    InitSync(device->m_Handle);
+    // InitSync(device->m_Handle);
 
     InitShaderPipeline(device);
 
@@ -220,10 +223,20 @@ TestDXLayer::~TestDXLayer() {
 void TestDXLayer::OnUpdate() {
     static UINT triangleAngle = 0;
 
-    CHECK(commandAllocator->Reset(), "Failed to reset command allocator");
+    // --- Throttle: wait on the OLDEST frame slot before reusing it ---
+    // On frames 0 and 1 this value is 0, so CpuWaitForValue returns immediately.
+    // From frame 2 onwards, this blocks only if the GPU is still on that slot.
+    const uint64_t waitValue = frameFenceValues[frameIndex];
+    if (waitValue > 0)
+        graphicsQueue->CpuWaitForValue(waitValue);
+
+
+    std::unique_ptr<DXCommandList> cmdList(static_cast<DXCommandList*>(graphicsQueue->GetCommandList().release()));
+    cmdList->Begin();
+    // CHECK(commandAllocator->Reset(), "Failed to reset command allocator");
 
     // Record commands to draw a triangle
-    CHECK(commandList->Reset(commandAllocator, nullptr), "Failed to reset command list");
+    // CHECK(commandList->Reset(commandAllocator, nullptr), "Failed to reset command list");
 
     UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
@@ -235,7 +248,7 @@ void TestDXLayer::OnUpdate() {
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
         barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        commandList->ResourceBarrier(1, &barrier);
+        cmdList->GetHandle()->ResourceBarrier(1, &barrier);
     }
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
@@ -243,23 +256,23 @@ void TestDXLayer::OnUpdate() {
 
     // Clear the render target
     float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    cmdList->GetHandle()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
     // Set viewport and scissor
     D3D12_VIEWPORT viewport = { 0.0f, 0.0f, static_cast<float>(window->GetWidth()), static_cast<float>(window->GetHeight()), 0.0f, 1.0f};
     D3D12_RECT scissorRect = {0, 0, LONG_MAX, LONG_MAX };
-    commandList->RSSetViewports(1, &viewport);
-    commandList->RSSetScissorRects(1, &scissorRect);
+    cmdList->GetHandle()->RSSetViewports(1, &viewport);
+    cmdList->GetHandle()->RSSetScissorRects(1, &scissorRect);
 
-    commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    commandList->SetGraphicsRootSignature(pipeline->GetRootSignature().Get());
-    commandList->SetPipelineState(pipeline->GetPSO().Get());
-
-    commandList->SetGraphicsRoot32BitConstant(0, triangleAngle, 0);
-    commandList->IASetVertexBuffers(0, 1, vertexBuffer->GetBufferView());
-    commandList->IASetIndexBuffer(indexBuffer->GetBufferView());
-    commandList->DrawIndexedInstanced(SIDE_COUNT*3, 1, 0, 0, 0);
+    cmdList->GetHandle()->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    cmdList->GetHandle()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    // cmdList->GetHandle()->SetGraphicsRootSignature(pipeline->GetRootSignature().Get());
+    // cmdList->GetHandle()->SetPipelineState(pipeline->GetPSO().Get());
+    cmdList->BindPipeline(pipeline);
+    cmdList->GetHandle()->SetGraphicsRoot32BitConstant(0, triangleAngle, 0);
+    cmdList->GetHandle()->IASetVertexBuffers(0, 1, vertexBuffer->GetBufferView());
+    cmdList->GetHandle()->IASetIndexBuffer(indexBuffer->GetBufferView());
+    cmdList->DrawIndexed(SIDE_COUNT*3, 1, 0, 0, 0);
 
     {
         D3D12_RESOURCE_BARRIER barrier = {};
@@ -269,28 +282,30 @@ void TestDXLayer::OnUpdate() {
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
         barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        commandList->ResourceBarrier(1, &barrier);
+        cmdList->GetHandle()->ResourceBarrier(1, &barrier);
     }
 
-    CHECK(commandList->Close(), "Failed to close command list");
+    cmdList->End();
+    // CHECK(cmdList->GetHandle()->Close(), "Failed to close command list");
 
-    ID3D12CommandList* commandLists[] = { commandList };
-    commandQueue->ExecuteCommandLists(1, commandLists);
+    const u64 frameDone = graphicsQueue->SubmitSingle(*cmdList);
+    // cmdQueue->ExecuteCommandLists(1, commandLists);
 
     CHECK(swapChain->Present(1, 0), "Failed to present swap chain");
 
+    graphicsQueue->CpuWaitForValue(frameDone - 1);
+
     //Wait on the CPU for the GPU frame to finish
-    const UINT64 currentFenceValue = ++fenceValue;
-    CHECK(commandQueue->Signal(fence, currentFenceValue), "Failed to signal the fence");
+    // const UINT64 currentFenceValue = ++fenceValue;
+    // CHECK(commandQueue->Signal(fence, currentFenceValue), "Failed to signal the fence");
 
-    if (fence->GetCompletedValue() < currentFenceValue) {
-        CHECK(fence->SetEventOnCompletion(currentFenceValue, fenceEvent), "Failed to set fence completion");
-        WaitForSingleObject(fenceEvent, INFINITE);
-    }
+    // if (fence->GetCompletedValue() < currentFenceValue) {
+    //     CHECK(fence->SetEventOnCompletion(currentFenceValue, fenceEvent), "Failed to set fence completion");
+    //     WaitForSingleObject(fenceEvent, INFINITE);
+    // }
 
 
 
+    frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
     triangleAngle+=2;
-
-
 }

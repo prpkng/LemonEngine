@@ -12,6 +12,7 @@
 
 #include "Backends/DX/API/DXPSO.h"
 #include "Backends/DX/API/DXRootSignatureDesc.h"
+#include "Backends/DX/Commands/DXCommandQueue.h"
 
 namespace Lemon::DX
 {
@@ -40,11 +41,19 @@ public:
 private:
     Lemon::WindowsWindow* window;
 
+    static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
+
+    uint32_t frameIndex = 0;
+    std::array<uint64_t, MAX_FRAMES_IN_FLIGHT> frameFenceValues = {};
+
+
     std::shared_ptr<Lemon::DX::DXPipeline> pipeline;
 
-    ID3D12CommandQueue* commandQueue;
-    ID3D12CommandAllocator* commandAllocator;
-    ID3D12GraphicsCommandList* commandList;
+    std::shared_ptr<Lemon::DX::DXCommandQueue> graphicsQueue;
+
+    // ID3D12CommandQueue* commandQueue;
+    // ID3D12CommandAllocator* commandAllocator;
+    // ID3D12GraphicsCommandList* commandList;
     IDXGISwapChain3* swapChain;
     ID3D12Resource* renderTargets[2];
     ID3D12DescriptorHeap* rtvHeap;

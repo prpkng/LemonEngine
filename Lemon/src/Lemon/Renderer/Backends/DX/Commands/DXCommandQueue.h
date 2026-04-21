@@ -37,6 +37,8 @@ namespace Lemon::DX
         [[nodiscard]] u64 GetCompletedValue() const override { return m_Fence->GetCompletedValue(); }
         [[nodiscard]] RHI::QueueType GetQueueType() const override { return m_QueueType; }
 
+        [[nodiscard]] ComPtr<ID3D12CommandQueue> GetHandle() const noexcept { return m_CommandQueue; }
+
     private:
         [[nodiscard]] ComPtr<ID3D12CommandAllocator> AcquireAllocator();
 

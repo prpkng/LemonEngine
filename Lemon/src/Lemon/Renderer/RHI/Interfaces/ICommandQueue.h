@@ -41,7 +41,7 @@ namespace Lemon::RHI
         virtual u64 Submit(std::span<ICommandList* const> commandLists) = 0;
 
         /// Convenience single-list submit
-        u64 Submit(ICommandList& cmdList)
+        u64 SubmitSingle(ICommandList& cmdList)
         {
             ICommandList* p = &cmdList;
             return Submit({&p, 1});
