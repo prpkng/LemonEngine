@@ -4,6 +4,7 @@ set (CMAKE_CXX_STANDARD 23)
 
 add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/SDL)
+add_subdirectory(vendor/magic_enum)
 
 add_library(Lemon SHARED
  "src/Lemon.h"
@@ -39,7 +40,11 @@ add_library(Lemon SHARED
         src/Lemon/Renderer/Helpers/VertexLayoutBuilder.cpp
         src/Lemon/Renderer/Buffers/IndexBuffer.h
         src/Lemon/Renderer/Backends/DX/DXIndexBuffer.cpp
-        src/Lemon/Renderer/Backends/DX/DXIndexBuffer.h)
+        src/Lemon/Renderer/Backends/DX/DXIndexBuffer.h
+        src/Lemon/Renderer/Pipelines/ShaderPiece.h
+        src/Lemon/Renderer/Backends/DX/DXShaderPiece.cpp
+        src/Lemon/Renderer/Backends/DX/DXShaderPiece.h
+        src/Lemon/Renderer/Backends/DX/DXUtils.cpp)
 
 target_include_directories(Lemon PUBLIC src/)
 target_include_directories(Lemon PRIVATE vendor/dx-headers)
@@ -56,6 +61,7 @@ target_compile_definitions(Lemon
 target_link_libraries(Lemon PUBLIC
         SDL3::SDL3     # For window handling
         spdlog::spdlog # For logging
+        magic_enum::magic_enum
         d3d12          # DirectX 12
         dxgi           # DirectX Graphics Infrastructure
         d3dcompiler    # DirectX shader compilation

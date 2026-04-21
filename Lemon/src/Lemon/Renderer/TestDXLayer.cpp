@@ -15,6 +15,8 @@
 #include <cmath>
 #include <numbers>
 
+#include "Backends/DX/DXShaderPiece.h"
+
 using namespace Lemon::RHI;
 using namespace Lemon::DX;
 
@@ -116,53 +118,47 @@ void TestDXLayer::InitShaderPipeline(ComPtr<ID3D12Device> device) {
     //Root signature is like have many object buffers and textures we want to use when drawing.
     //For our rotating triangle, we only need a single constant that is going to be our angle
 
-    D3D12_ROOT_PARAMETER rootParameters[1] = {};
-    rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
-    rootParameters[0].Constants.Num32BitValues = 1;
-    rootParameters[0].Constants.ShaderRegister = 0;
-    rootParameters[0].Constants.RegisterSpace = 0;
-    rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
+    rootParameters[0].InitAsConstants(1, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 
     rootSignature = nullptr;
-    D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc = {
-        .NumParameters = _countof(rootParameters),
-        .pParameters = rootParameters,
-        .NumStaticSamplers = 0,
-        .pStaticSamplers = nullptr,
-        .Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT
-    };
+    CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+    rootSignatureDesc.Init(
+        _countof(rootParameters),
+        rootParameters,
+        0,
+        nullptr,
+        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
-    ID3DBlob* signatureBlob = nullptr;
-    ID3DBlob* errorBlob = nullptr;
-    CHECK(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob), "Failed to serialize root signature");
-    CHECK(device->CreateRootSignature(0, signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)), "Failed to create root signature");
+    ComPtr<ID3DBlob> signatureBlob = nullptr;
+    ComPtr<ID3DBlob> errorBlob = nullptr;
 
-    if (signatureBlob) {
-        signatureBlob->Release();
-        signatureBlob = nullptr;
-    }
+    CHECK(D3D12SerializeRootSignature(
+        &rootSignatureDesc,
+        D3D_ROOT_SIGNATURE_VERSION_1,
+        &signatureBlob,
+        &errorBlob),
+        "Failed to serialize root signature");
 
-    if (errorBlob) {
-        errorBlob->Release();
-        errorBlob = nullptr;
-    }
+    CHECK(device->CreateRootSignature(
+        0,
+        signatureBlob->GetBufferPointer(),
+        signatureBlob->GetBufferSize(),
+        IID_PPV_ARGS(&rootSignature)),
+        "Failed to create root signature");
 
-    ID3DBlob* vertexShader = nullptr;
-    ID3DBlob* pixelShader = nullptr;
-    CHECK(D3DCompileFromFile(L"shader.hlsl", nullptr, nullptr, "VSMain",
-                                     "vs_5_0", 0, 0, &vertexShader, nullptr), "Failed to compile vertex shader");
-    CHECK(D3DCompileFromFile(L"shader.hlsl", nullptr, nullptr, "PSMain", "ps_5_0",
-                                     0, 0, &pixelShader, nullptr), "Failed to compile pixel shader");
+    DXShaderPiece vertexShader(L"shader.hlsl", ShaderPieceType::Vertex);
+    DXShaderPiece pixelShader(L"shader.hlsl", ShaderPieceType::Pixel);
 
     // Pipeline state
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.pRootSignature = rootSignature;
 
-    psoDesc.VS.pShaderBytecode = vertexShader->GetBufferPointer();
-    psoDesc.VS.BytecodeLength = vertexShader->GetBufferSize();
+    psoDesc.VS.pShaderBytecode = vertexShader.GetBytecode();
+    psoDesc.VS.BytecodeLength = vertexShader.GetLength();
 
-    psoDesc.PS.pShaderBytecode = pixelShader->GetBufferPointer();
-    psoDesc.PS.BytecodeLength = pixelShader->GetBufferSize();
+    psoDesc.PS.pShaderBytecode = pixelShader.GetBytecode();
+    psoDesc.PS.BytecodeLength = pixelShader.GetLength();
 
     psoDesc.SampleMask = UINT_MAX;
 
@@ -190,11 +186,6 @@ void TestDXLayer::InitShaderPipeline(ComPtr<ID3D12Device> device) {
 
     pipelineState = nullptr;
     CHECK(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)), "Failed to create pipeline state");
-
-    vertexShader->Release();
-    vertexShader = nullptr;
-    pixelShader->Release();
-    pixelShader = nullptr;
 }
 
 constexpr int SIDE_COUNT = 6;
@@ -220,14 +211,6 @@ void TestDXLayer::InitBuffers(const std::unique_ptr<DXDevice>& dxDevice) {
         indices.push_back(next+1);
     }
 
-
-    for (auto vert : vertices)
-        LM_CORE_INFO("Vertex {0}", vert.ToString());
-    for (auto ind : indices)
-        LM_CORE_INFO("Index {0}", ind);
-
-    vertexBuffer = nullptr;
-
     Buffer::Desc desc{};
     desc.memoryUsage = MemoryUsage::CPU_To_GPU;
     desc.initialData = vertices.data();
@@ -243,8 +226,6 @@ void TestDXLayer::InitBuffers(const std::unique_ptr<DXDevice>& dxDevice) {
 
     vertexBuffer = std::dynamic_pointer_cast<DXVertexBuffer>(dxDevice->CreateVertexBuffer(vertexDesc));
 
-
-    indexBuffer = nullptr;
     desc.initialData = indices.data();
     desc.size = indices.size() * sizeof(uint16_t);
     desc.usage = BufferUsage::Index;

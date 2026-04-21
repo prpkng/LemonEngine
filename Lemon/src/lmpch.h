@@ -19,5 +19,7 @@
 
 #ifdef LM_PLATFORM_WINDOWS
 	#include <Windows.h>
+    #include <d3d12.h>
+    #include <dxgi.h>
 #endif
 

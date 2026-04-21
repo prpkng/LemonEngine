@@ -4,3 +4,6 @@
 [submodule "Lemon/vendor/SDL"]
 	path = Lemon/vendor/SDL
 	url = https://github.com/libsdl-org/SDL
+[submodule "Lemon/vendor/magic_enum"]
+	path = Lemon/vendor/magic_enum
+	url = https://github.com/Neargye/magic_enum.git
