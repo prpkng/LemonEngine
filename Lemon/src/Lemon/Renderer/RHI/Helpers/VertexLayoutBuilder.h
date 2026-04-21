@@ -9,7 +9,7 @@ namespace Lemon::RHI
     {
     public:
         explicit VertexLayoutBuilder();
-        VertexLayoutBuilder& WithElement(const std::string& name, ElementType type, bool addToAccumulation = true);
+        VertexLayoutBuilder& WithElement(const std::string& semanticName, ElementType type, bool addToAccumulation = true);
         VertexLayout Build(InputRate inputRate = InputRate::PerVertex);
 
     private:
@@ -17,4 +17,8 @@ namespace Lemon::RHI
         uint32_t m_TotalStride;
         std::vector<VertexElement> m_Elements{};
     };
+
+
+    u32 GetVertexElementSize(const ElementType type);
 }
+

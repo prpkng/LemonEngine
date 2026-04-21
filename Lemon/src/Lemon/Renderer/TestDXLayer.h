@@ -37,7 +37,7 @@ public:
 
     void InitBuffers(const std::unique_ptr<Lemon::DX::DXDevice>& device);
 
-    explicit TestDXLayer(std::unique_ptr<Lemon::Window>& wnd);
+    explicit TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd);
     ~TestDXLayer() override;
 
     void OnUpdate() override;

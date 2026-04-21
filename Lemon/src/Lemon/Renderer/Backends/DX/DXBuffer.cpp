@@ -11,7 +11,6 @@ namespace Lemon::DX
     DXBuffer::DXBuffer(const DXDevice* device, const Desc& desc) : IBuffer(desc)
     {
         D3D12_HEAP_PROPERTIES heapProps{};
-        heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
         heapProps.Type = TranslateHeapType(desc.memoryUsage);
         auto initialResourceState = TranslateInitialState(desc.memoryUsage);
 
@@ -35,7 +34,7 @@ namespace Lemon::DX
 
         if (desc.initialData)
         {
-            if (m_MemoryUsage == RHI::MemoryUsage::CPU_To_GPU)
+            if (m_MemoryUsage == RHI::MemoryUsage::CPU_TO_GPU)
             {
                 void* mapped = DXBuffer::Map();
                 memcpy(mapped, desc.initialData, desc.size);

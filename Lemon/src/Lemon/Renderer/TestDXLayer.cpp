@@ -159,7 +159,7 @@ void TestDXLayer::InitBuffers(const std::unique_ptr<DXDevice>& dxDevice) {
     }
 
     IBuffer::Desc desc{};
-    desc.memoryUsage = MemoryUsage::CPU_To_GPU;
+    desc.memoryUsage = MemoryUsage::CPU_TO_GPU;
     desc.initialData = vertices.data();
     desc.size = vertices.size() * sizeof(Vertex);
     desc.usage = BufferUsage::Vertex;
@@ -186,12 +186,12 @@ void TestDXLayer::InitBuffers(const std::unique_ptr<DXDevice>& dxDevice) {
     indexBuffer = std::dynamic_pointer_cast<DXIndexBuffer>(dxDevice->CreateIndexBuffer(indexDesc));
 }
 
-TestDXLayer::TestDXLayer(std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX Layer") {
+TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX Layer") {
 
     window = static_cast<Lemon::WindowsWindow*>(wnd.get());
 
-    SDL_PropertiesID props = SDL_GetWindowProperties(window->m_Handle);
-    HWND hwnd = (HWND)SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+    const SDL_PropertiesID props = SDL_GetWindowProperties(window->m_Handle);
+    const auto hwnd = static_cast<HWND>(SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr));
     LM_CORE_ASSERT(hwnd, "Failed to retrieve HWND from SDL!");
 
     DXDevice::Desc desc {};
@@ -290,7 +290,7 @@ void TestDXLayer::OnUpdate() {
 
 
 
-    triangleAngle++;
+    triangleAngle+=2;
 
 
 }
