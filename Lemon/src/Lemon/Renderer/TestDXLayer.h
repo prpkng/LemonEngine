@@ -18,6 +18,11 @@
 #include "Backends/DX/API/DXPSO.h"
 #include "Backends/DX/API/DXRootSignatureDesc.h"
 
+namespace Lemon::DX
+{
+    class DXPipeline;
+}
+
 class TestDXLayer : public Lemon::Layer {
 public:
     void InitCommandQueue(ComPtr<ID3D12Device> device);
@@ -28,7 +33,7 @@ public:
 
     void InitSync(ComPtr<ID3D12Device> device);
 
-    void InitShaderPipeline(ComPtr<ID3D12Device> device);
+    void InitShaderPipeline(const std::unique_ptr<Lemon::DX::DXDevice>& device);
 
     void InitBuffers(const std::unique_ptr<Lemon::DX::DXDevice>& device);
 
@@ -40,7 +45,7 @@ public:
 private:
     Lemon::WindowsWindow* window;
 
-    Lemon::DX::DXPipelineStateObject pso;
+    std::shared_ptr<Lemon::DX::DXPipeline> pipeline;
 
     ID3D12CommandQueue* commandQueue;
     ID3D12CommandAllocator* commandAllocator;

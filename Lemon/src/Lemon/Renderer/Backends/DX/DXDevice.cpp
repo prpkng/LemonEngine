@@ -62,6 +62,7 @@ namespace Lemon::DX
                 rootDesc.AddSRV(rootParam.shaderReg, rootParam.space, Convert::ToVisibility(rootParam.visibility));
                 break;
             case RHI::RootParamType::UnorderedAccessView:
+                //TODO
                 break;
             default: ;
             }

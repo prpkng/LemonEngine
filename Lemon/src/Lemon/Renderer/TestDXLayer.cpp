@@ -15,6 +15,7 @@
 #include <cmath>
 #include <numbers>
 
+#include "Backends/DX/DXPipeline.h"
 #include "Backends/DX/API/DXPSO.h"
 #include "Backends/DX/API/TranslationHelpers.h"
 
@@ -116,7 +117,7 @@ void TestDXLayer::InitSync(ComPtr<ID3D12Device> device) {
     fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }
 
-void TestDXLayer::InitShaderPipeline(ComPtr<ID3D12Device> device) {
+void TestDXLayer::InitShaderPipeline(const std::unique_ptr<DXDevice>& device) {
     // //Root signature is like have many object buffers and textures we want to use when drawing.
     // //For our rotating triangle, we only need a single constant that is going to be our angle
     IPipeline::Desc desc{};
@@ -131,42 +132,7 @@ void TestDXLayer::InitShaderPipeline(ComPtr<ID3D12Device> device) {
         RootParameter { RootParamType::Constants, 1, 0, 0, ShaderStage::Vertex }
     };
 
-
-    std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout;
-    for (const auto& vertexAttribute : desc.inputLayout)
-    {
-        inputLayout.push_back({
-            vertexAttribute.semanticName.c_str(),
-            vertexAttribute.semanticIndex,
-            Convert::TranslateElementTypeToFormat(vertexAttribute.format),
-            vertexAttribute.binding,
-            vertexAttribute.offset,
-            vertexAttribute.inputRate == InputRate::PerVertex
-                ? D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA
-                : D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA,
-            0
-        });
-    }
-
-
-    DXShader vertexShader(L"shader.hlsl", ShaderStage::Vertex);
-    DXShader pixelShader(L"shader.hlsl", ShaderStage::Pixel);
-
-    DXRootSignatureDesc rootDesc;
-    rootDesc.AddConstant(1, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-
-    // std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
-    //     { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-    //     { "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 8, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-    // };
-
-    DXGraphicsPSODesc psoDesc;
-    psoDesc.SetVertexShader(vertexShader.GetBytecode(), vertexShader.GetLength())
-           .SetPixelShader(pixelShader.GetBytecode(), pixelShader.GetLength())
-           .SetInputLayout(std::move(inputLayout))
-           .SetRenderTargetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
-
-    pso = DXPipelineStateObject::Create(device, rootDesc, psoDesc);
+    pipeline = std::dynamic_pointer_cast<DXPipeline>(device->CreatePipeline(desc));
 }
 
 constexpr int SIDE_COUNT = 6;
@@ -243,7 +209,7 @@ TestDXLayer::TestDXLayer(std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX L
 
     InitSync(device->m_Handle);
 
-    InitShaderPipeline(device->m_Handle);
+    InitShaderPipeline(device);
 
     InitBuffers(device);
 }
@@ -287,8 +253,8 @@ void TestDXLayer::OnUpdate() {
 
     commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    commandList->SetGraphicsRootSignature(pso.GetRootSignature().Get());
-    commandList->SetPipelineState(pso.GetPSO().Get());
+    commandList->SetGraphicsRootSignature(pipeline->GetRootSignature().Get());
+    commandList->SetPipelineState(pipeline->GetPSO().Get());
 
     commandList->SetGraphicsRoot32BitConstant(0, triangleAngle, 0);
     commandList->IASetVertexBuffers(0, 1, vertexBuffer->GetBufferView());
