@@ -3,13 +3,14 @@
 
 #include "d3d12.h"
 #include "Lemon/Renderer/RHI/Interfaces/IBuffer.h"
+#include "Lemon/Renderer/RHI/Interfaces/IDevice.h"
 #include "Lemon/Renderer/RHI/Interfaces/IPipeline.h"
 
 using Microsoft::WRL::ComPtr;
 
 namespace Lemon::DX
 {
-    class DXDevice
+    class DXDevice : public RHI::IDevice
     {
     public:
         struct Desc
@@ -20,13 +21,15 @@ namespace Lemon::DX
             unsigned int initialWidth, initialHeight;
         };
 
-        std::shared_ptr<RHI::IBuffer> CreateBuffer(const RHI::IBuffer::Desc& desc);
-        std::shared_ptr<RHI::VertexBuffer> CreateVertexBuffer(const RHI::VertexBuffer::Desc& desc);
-        std::shared_ptr<RHI::IndexBuffer> CreateIndexBuffer(const RHI::IndexBuffer::Desc& desc);
-        std::shared_ptr<RHI::IPipeline> CreatePipeline(const RHI::IPipeline::Desc& desc) const;
+        std::shared_ptr<RHI::IBuffer> CreateBuffer(const RHI::IBuffer::Desc& desc) override;
+        std::shared_ptr<RHI::VertexBuffer> CreateVertexBuffer(const RHI::VertexBuffer::Desc& desc) override;
+        std::shared_ptr<RHI::IndexBuffer> CreateIndexBuffer(const RHI::IndexBuffer::Desc& desc) override;
+        std::shared_ptr<RHI::IPipeline> CreatePipeline(const RHI::IPipeline::Desc& desc) override;
 
-        DXDevice(const Desc& desc);
-        ~DXDevice();
+
+
+        explicit DXDevice(const Desc& desc);
+        ~DXDevice() override;
 
         ComPtr<ID3D12Device> GetHandle() const { return m_Handle; }
 

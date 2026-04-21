@@ -1,7 +1,5 @@
 #pragma once
 
-#include <lmpch.h>
-
 #include <Lemon/Layer.h>
 
 #include <d3d12.h>
@@ -12,8 +10,6 @@
 #include "Backends/DX/DXDevice.h"
 #include "Backends/DX/Resources/DXBuffer.h"
 
-#include "Backends/DX/Pipelines/DXShader.h"
-#include "Backends/DX/API/DXGraphicsPSODesc.h"
 #include "Backends/DX/API/DXPSO.h"
 #include "Backends/DX/API/DXRootSignatureDesc.h"
 

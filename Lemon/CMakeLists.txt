@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
 set (CMAKE_CXX_STANDARD 23)
+set (CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/SDL)
@@ -48,6 +50,12 @@ add_library(Lemon SHARED
         src/Lemon/Renderer/Backends/DX/API/DXGraphicsPSODesc.h
         src/Lemon/Renderer/Backends/DX/API/DXPSO.cpp
         src/Lemon/Renderer/Backends/DX/API/DXPSO.h
+        src/Lemon/Renderer/RHI/Types/RHICommandTypes.h
+        src/Lemon/Renderer/RHI/Interfaces/IFence.h
+        src/Lemon/Renderer/RHI/Types/RHIEnums.h
+        src/Lemon/Renderer/RHI/Interfaces/ICommandList.h
+        src/Lemon/Renderer/RHI/Interfaces/ICommandQueue.h
+        src/Lemon/Renderer/RHI/Interfaces/IDevice.h
 )
 
 target_include_directories(Lemon PUBLIC src/)

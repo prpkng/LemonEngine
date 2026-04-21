@@ -27,7 +27,7 @@ namespace Lemon::DX
         return std::make_shared<DXIndexBuffer>(this, desc);
     }
 
-    std::shared_ptr<RHI::IPipeline> DXDevice::CreatePipeline(const RHI::IPipeline::Desc& desc) const
+    std::shared_ptr<RHI::IPipeline> DXDevice::CreatePipeline(const RHI::IPipeline::Desc& desc)
     {
         std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout;
         for (const auto& vertexAttribute : desc.inputLayout)
@@ -93,7 +93,7 @@ namespace Lemon::DX
         return std::make_shared<DXPipeline>(DXPipelineStateObject::Create(m_Handle, rootDesc, psoDesc));
     }
 
-    DXDevice::DXDevice(const Desc& desc)
+    DXDevice::DXDevice(const Desc& desc) : IDevice()
     {
         if (desc.enableDebugLayer)
         {
