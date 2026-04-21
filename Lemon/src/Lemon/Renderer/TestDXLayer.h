@@ -28,9 +28,9 @@ public:
 
     void InitSync(ComPtr<ID3D12Device> device);
 
-    void InitShaderPipeline(const std::unique_ptr<Lemon::DX::DXDevice>& device);
+    void InitShaderPipeline(const std::shared_ptr<Lemon::DX::DXDevice>& device);
 
-    void InitBuffers(const std::unique_ptr<Lemon::DX::DXDevice>& device);
+    void InitBuffers(const std::shared_ptr<Lemon::DX::DXDevice>& device);
 
     explicit TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd);
     ~TestDXLayer() override;

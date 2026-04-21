@@ -117,7 +117,7 @@ void TestDXLayer::InitSync(ComPtr<ID3D12Device> device) {
     fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }
 
-void TestDXLayer::InitShaderPipeline(const std::unique_ptr<DXDevice>& device) {
+void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device) {
     // //Root signature is like have many object buffers and textures we want to use when drawing.
     // //For our rotating triangle, we only need a single constant that is going to be our angle
     IPipeline::Desc desc{};
@@ -137,7 +137,7 @@ void TestDXLayer::InitShaderPipeline(const std::unique_ptr<DXDevice>& device) {
 
 constexpr int SIDE_COUNT = 6;
 
-void TestDXLayer::InitBuffers(const std::unique_ptr<DXDevice>& dxDevice) {
+void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice) {
     auto device = dxDevice->GetHandle();
 
     std::vector<Vertex> vertices ={};
@@ -199,7 +199,7 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
     desc.initialWidth = window->GetWidth();
     desc.initialHeight = window->GetHeight();
     desc.nativeWindowPtr = hwnd;
-    const auto device = std::make_unique<DXDevice>(desc);
+    const auto device = std::make_shared<DXDevice>(desc);
 
     InitCommandQueue(device->m_Handle);
 

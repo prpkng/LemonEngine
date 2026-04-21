@@ -8,7 +8,7 @@
 
 namespace Lemon::DX
 {
-    DXBuffer::DXBuffer(const DXDevice* device, const Desc& desc) : IBuffer(desc)
+    DXBuffer::DXBuffer(const std::shared_ptr<DXDevice> device, const Desc& desc) : IBuffer(desc)
     {
         D3D12_HEAP_PROPERTIES heapProps{};
         heapProps.Type = Convert::ToHeapType(desc.memoryUsage);
@@ -80,7 +80,7 @@ namespace Lemon::DX
     }
 
 
-    DXVertexBuffer::DXVertexBuffer(DXDevice* device, const Desc& desc) : VertexBuffer(desc)
+    DXVertexBuffer::DXVertexBuffer(std::shared_ptr<DXDevice> device, const Desc& desc) : VertexBuffer(desc)
     {
         m_Buffer = device->CreateBuffer(desc.bufferDesc);
 
@@ -91,7 +91,7 @@ namespace Lemon::DX
         m_VertexBufferView.StrideInBytes = desc.layout.stride;
     }
 
-    DXIndexBuffer::DXIndexBuffer(DXDevice* device, const Desc& desc) : IndexBuffer(desc)
+    DXIndexBuffer::DXIndexBuffer(std::shared_ptr<DXDevice> device, const Desc& desc) : IndexBuffer(desc)
     {
         m_Buffer = device->CreateBuffer(desc.bufferDesc);
 

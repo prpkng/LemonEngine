@@ -56,6 +56,10 @@ add_library(Lemon SHARED
         src/Lemon/Renderer/RHI/Interfaces/ICommandList.h
         src/Lemon/Renderer/RHI/Interfaces/ICommandQueue.h
         src/Lemon/Renderer/RHI/Interfaces/IDevice.h
+        src/Lemon/Renderer/Backends/DX/Commands/DXCommandQueue.h
+        src/Lemon/Renderer/Backends/DX/Commands/DXCommandQueue.cpp
+        src/Lemon/Renderer/Backends/DX/Commands/DXCommandList.cpp
+        src/Lemon/Renderer/Backends/DX/Commands/DXCommandList.h
 )
 
 target_include_directories(Lemon PUBLIC src/)

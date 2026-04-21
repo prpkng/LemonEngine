@@ -4,6 +4,7 @@
 #include <memory>
 #include "IPipeline.h"
 #include "IBuffer.h"
+#include "ICommandQueue.h"
 
 namespace Lemon::RHI
 {
@@ -20,10 +21,11 @@ namespace Lemon::RHI
 
         virtual ~IDevice() = default;
 
-        virtual std::shared_ptr<IBuffer> CreateBuffer(const IBuffer::Desc& desc) = 0;
-        virtual std::shared_ptr<VertexBuffer> CreateVertexBuffer(const VertexBuffer::Desc& desc) = 0;
-        virtual std::shared_ptr<IndexBuffer> CreateIndexBuffer(const IndexBuffer::Desc& desc) = 0;
-        virtual std::shared_ptr<IPipeline> CreatePipeline(const IPipeline::Desc& desc) = 0;
+        [[nodiscard]] virtual std::shared_ptr<IBuffer> CreateBuffer(const IBuffer::Desc& desc) = 0;
+        [[nodiscard]] virtual std::shared_ptr<VertexBuffer> CreateVertexBuffer(const VertexBuffer::Desc& desc) = 0;
+        [[nodiscard]] virtual std::shared_ptr<IndexBuffer> CreateIndexBuffer(const IndexBuffer::Desc& desc) = 0;
+        [[nodiscard]] virtual std::shared_ptr<IPipeline> CreatePipeline(const IPipeline::Desc& desc) = 0;
+        [[nodiscard]] virtual std::shared_ptr<ICommandQueue> CreateCommandQueue(QueueType type) = 0;
     private:
     };
 }

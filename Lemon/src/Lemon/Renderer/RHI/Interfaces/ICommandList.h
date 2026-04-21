@@ -27,7 +27,7 @@ namespace Lemon::RHI
         virtual void Begin() = 0;
         virtual void End() = 0;
 
-        virtual void BindPipeline(const IPipeline& pipeline);
+        virtual void BindPipeline(std::shared_ptr<IPipeline> pipeline) = 0;
 
         virtual void Draw(
             u32 vertexCount,

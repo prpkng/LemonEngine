@@ -9,22 +9,23 @@
 #include "API/DXPSO.h"
 #include "API/DXRootSignatureDesc.h"
 #include "API/Helpers.h"
+#include "Commands/DXCommandQueue.h"
 
 namespace Lemon::DX
 {
     std::shared_ptr<RHI::IBuffer> DXDevice::CreateBuffer(const RHI::IBuffer::Desc& desc)
     {
-        return std::make_shared<DXBuffer>(this, desc);
+        return std::make_shared<DXBuffer>(shared_from_this(), desc);
     }
 
     std::shared_ptr<RHI::VertexBuffer> DXDevice::CreateVertexBuffer(const RHI::VertexBuffer::Desc& desc)
     {
-        return std::make_shared<DXVertexBuffer>(this, desc);
+        return std::make_shared<DXVertexBuffer>(shared_from_this(), desc);
     }
 
     std::shared_ptr<RHI::IndexBuffer> DXDevice::CreateIndexBuffer(const RHI::IndexBuffer::Desc& desc)
     {
-        return std::make_shared<DXIndexBuffer>(this, desc);
+        return std::make_shared<DXIndexBuffer>(shared_from_this(), desc);
     }
 
     std::shared_ptr<RHI::IPipeline> DXDevice::CreatePipeline(const RHI::IPipeline::Desc& desc)
@@ -91,6 +92,11 @@ namespace Lemon::DX
         }
 
         return std::make_shared<DXPipeline>(DXPipelineStateObject::Create(m_Handle, rootDesc, psoDesc));
+    }
+
+    std::shared_ptr<RHI::ICommandQueue> DXDevice::CreateCommandQueue(RHI::QueueType type)
+    {
+        return std::make_shared<DXCommandQueue>(shared_from_this(), type);
     }
 
     DXDevice::DXDevice(const Desc& desc) : IDevice()

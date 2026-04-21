@@ -7,7 +7,7 @@ namespace Lemon::DX
     class DXBuffer : public RHI::IBuffer
     {
     public:
-        DXBuffer(const DXDevice* device, const Desc& desc);
+        DXBuffer(std::shared_ptr<DXDevice> device, const Desc& desc);
 
         void* Map() override;
         void Unmap() override;
@@ -27,7 +27,7 @@ namespace Lemon::DX
     class DXVertexBuffer : public RHI::VertexBuffer
     {
     public:
-        DXVertexBuffer(DXDevice* device, const Desc& desc);
+        DXVertexBuffer(std::shared_ptr<DXDevice> device, const Desc& desc);
 
         const std::shared_ptr<RHI::IBuffer> GetBuffer() const override { return m_Buffer; }
         const D3D12_VERTEX_BUFFER_VIEW* GetBufferView() const { return &m_VertexBufferView; }
@@ -38,7 +38,7 @@ namespace Lemon::DX
 
     class DXIndexBuffer : public RHI::IndexBuffer {
     public:
-        DXIndexBuffer(DXDevice* device, const Desc& desc);
+        DXIndexBuffer(std::shared_ptr<DXDevice> device, const Desc& desc);
 
         const std::shared_ptr<RHI::IBuffer> GetBuffer() const override { return m_Buffer; }
         const D3D12_INDEX_BUFFER_VIEW* GetBufferView() const { return &m_IndexBufferView; }

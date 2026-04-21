@@ -10,7 +10,7 @@ using Microsoft::WRL::ComPtr;
 
 namespace Lemon::DX
 {
-    class DXDevice : public RHI::IDevice
+    class DXDevice : public RHI::IDevice, public std::enable_shared_from_this<DXDevice>
     {
     public:
         struct Desc
@@ -21,11 +21,11 @@ namespace Lemon::DX
             unsigned int initialWidth, initialHeight;
         };
 
-        std::shared_ptr<RHI::IBuffer> CreateBuffer(const RHI::IBuffer::Desc& desc) override;
-        std::shared_ptr<RHI::VertexBuffer> CreateVertexBuffer(const RHI::VertexBuffer::Desc& desc) override;
-        std::shared_ptr<RHI::IndexBuffer> CreateIndexBuffer(const RHI::IndexBuffer::Desc& desc) override;
-        std::shared_ptr<RHI::IPipeline> CreatePipeline(const RHI::IPipeline::Desc& desc) override;
-
+        [[nodiscard]] std::shared_ptr<RHI::IBuffer> CreateBuffer(const RHI::IBuffer::Desc& desc) override;
+        [[nodiscard]] std::shared_ptr<RHI::VertexBuffer> CreateVertexBuffer(const RHI::VertexBuffer::Desc& desc) override;
+        [[nodiscard]] std::shared_ptr<RHI::IndexBuffer> CreateIndexBuffer(const RHI::IndexBuffer::Desc& desc) override;
+        [[nodiscard]] std::shared_ptr<RHI::IPipeline> CreatePipeline(const RHI::IPipeline::Desc& desc) override;
+        [[nodiscard]] std::shared_ptr<RHI::ICommandQueue> CreateCommandQueue(RHI::QueueType type) override;
 
 
         explicit DXDevice(const Desc& desc);

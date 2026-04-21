@@ -6,6 +6,8 @@
 
 #include <wrl/client.h>
 
+#include "Lemon/Renderer/RHI/Types/RHICommandTypes.h"
+
 #define CHECK(x, msg) { HRESULT __hr__ = x; if (FAILED(__hr__)) { LM_CORE_FATAL("{0}: {1}", msg, HrToString(__hr__)); abort(); } }
 
 using Microsoft::WRL::ComPtr;
@@ -122,6 +124,15 @@ namespace Lemon::DX::Convert
 
     [[nodiscard]] constexpr DXGI_FORMAT ToVertexFormat(const Format f) noexcept {
         return ToFormat(f); // reuse — same enum, different semantic use
+    }
+
+    [[nodiscard]] constexpr D3D12_COMMAND_LIST_TYPE ToCommandListType(const QueueType t) noexcept {
+        switch (t) {
+        case QueueType::Graphics: return D3D12_COMMAND_LIST_TYPE_DIRECT;
+        case QueueType::Compute:  return D3D12_COMMAND_LIST_TYPE_COMPUTE;
+        case QueueType::Copy:     return D3D12_COMMAND_LIST_TYPE_COPY;
+        default:                  return D3D12_COMMAND_LIST_TYPE_DIRECT;
+        }
     }
 
 
