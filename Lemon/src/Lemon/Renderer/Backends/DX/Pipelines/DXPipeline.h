@@ -1,7 +1,7 @@
 #pragma once
-#include "API/DXPSO.h"
+#include "../API/DXPSO.h"
 #include "Lemon/Renderer/RHI/Interfaces/IPipeline.h"
-#include "API/DXUtils.h"
+#include "../API/Helpers.h"
 
 namespace Lemon::DX
 {

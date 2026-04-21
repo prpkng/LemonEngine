@@ -23,7 +23,7 @@ namespace Lemon::DX
         std::shared_ptr<RHI::IBuffer> CreateBuffer(const RHI::IBuffer::Desc& desc);
         std::shared_ptr<RHI::VertexBuffer> CreateVertexBuffer(const RHI::VertexBuffer::Desc& desc);
         std::shared_ptr<RHI::IndexBuffer> CreateIndexBuffer(const RHI::IndexBuffer::Desc& desc);
-        std::shared_ptr<RHI::IPipeline> CreatePipeline(const RHI::IPipeline::Desc& desc);
+        std::shared_ptr<RHI::IPipeline> CreatePipeline(const RHI::IPipeline::Desc& desc) const;
 
         DXDevice(const Desc& desc);
         ~DXDevice();

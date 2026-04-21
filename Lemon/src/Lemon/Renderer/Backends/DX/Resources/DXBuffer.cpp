@@ -4,15 +4,15 @@
 
 #include "DXBuffer.h"
 
-#include "API/DXUtils.h"
+#include "../API/Helpers.h"
 
 namespace Lemon::DX
 {
     DXBuffer::DXBuffer(const DXDevice* device, const Desc& desc) : IBuffer(desc)
     {
         D3D12_HEAP_PROPERTIES heapProps{};
-        heapProps.Type = TranslateHeapType(desc.memoryUsage);
-        auto initialResourceState = TranslateInitialState(desc.memoryUsage);
+        heapProps.Type = Convert::ToHeapType(desc.memoryUsage);
+        const auto initialResourceState = Convert::ToResourceState(desc.memoryUsage);
 
         D3D12_RESOURCE_DESC resourceDesc{};
         resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -54,7 +54,7 @@ namespace Lemon::DX
         LM_CORE_ASSERT(m_MemoryUsage != RHI::MemoryUsage::GPU_ONLY, "Cannot map GPU_ONLY buffer");
 
         void* data = nullptr;
-        D3D12_RANGE readRange = {};
+        constexpr D3D12_RANGE readRange = {};
         CHECK(m_Handle->Map(0, &readRange, &data), "Failed to map buffer resource");
 
         return data;
@@ -65,7 +65,7 @@ namespace Lemon::DX
         LM_CORE_ASSERT(m_MemoryUsage != RHI::MemoryUsage::GPU_ONLY, "Cannot unmap GPU_ONLY buffer");
 
 
-        D3D12_RANGE writtenRange = { 0, m_Size };
+        const D3D12_RANGE writtenRange = { 0, m_Size };
         m_Handle->Unmap(0, &writtenRange);
     }
 
@@ -77,5 +77,28 @@ namespace Lemon::DX
         void* mapped = Map();
         std::memcpy(static_cast<uint8_t*>(mapped) + offset, data, size);
         Unmap();
+    }
+
+
+    DXVertexBuffer::DXVertexBuffer(DXDevice* device, const Desc& desc) : VertexBuffer(desc)
+    {
+        m_Buffer = device->CreateBuffer(desc.bufferDesc);
+
+        const auto bufferAsDX = std::dynamic_pointer_cast<DXBuffer>(m_Buffer);
+        m_VertexBufferView = {};
+        m_VertexBufferView.BufferLocation = bufferAsDX->GetVirtualAddress();
+        m_VertexBufferView.SizeInBytes = m_Buffer->GetSize();
+        m_VertexBufferView.StrideInBytes = desc.layout.stride;
+    }
+
+    DXIndexBuffer::DXIndexBuffer(DXDevice* device, const Desc& desc) : IndexBuffer(desc)
+    {
+        m_Buffer = device->CreateBuffer(desc.bufferDesc);
+
+        const auto bufferAsDX = std::dynamic_pointer_cast<DXBuffer>(m_Buffer);
+        m_IndexBufferView = {};
+        m_IndexBufferView.BufferLocation = bufferAsDX->GetVirtualAddress();
+        m_IndexBufferView.SizeInBytes = m_Buffer->GetSize();
+        m_IndexBufferView.Format = TranslateElementTypeToFormat(m_IndexType);
     }
 }

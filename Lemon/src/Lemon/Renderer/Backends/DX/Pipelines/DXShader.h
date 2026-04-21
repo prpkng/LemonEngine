@@ -1,7 +1,7 @@
 #pragma once
 #include <Lemon/Renderer/RHI/Interfaces/IShader.h>
 
-#include "API/DXUtils.h"
+#include "../API/Helpers.h"
 #include "d3dcommon.h"
 
 namespace Lemon::DX

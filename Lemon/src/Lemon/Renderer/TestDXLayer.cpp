@@ -5,9 +5,9 @@
 #include <dxgi1_4.h>
 #include <d3dcompiler.h>
 
-#include "Backends/DX/DXBuffer.h"
+#include "Backends/DX/Resources/DXBuffer.h"
 #include "Backends/DX/DXDevice.h"
-#include "Backends/DX/API/DXUtils.h"
+#include "Backends/DX/API/Helpers.h"
 #include "RHI/Helpers/VertexLayoutBuilder.h"
 #include "Platform/WindowsWindow.h"
 #include "SDL3/SDL_properties.h"
@@ -15,9 +15,9 @@
 #include <cmath>
 #include <numbers>
 
-#include "Backends/DX/DXPipeline.h"
+#include "Backends/DX/Pipelines/DXPipeline.h"
 #include "Backends/DX/API/DXPSO.h"
-#include "Backends/DX/API/TranslationHelpers.h"
+#include "Backends/DX/API/Helpers.h"
 
 
 using namespace Lemon::RHI;

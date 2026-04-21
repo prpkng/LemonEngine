@@ -4,6 +4,16 @@
 #include <Lemon/Renderer/RHI/Types/RHITypes.h>
 #include <Lemon/Core.h>
 
+#include <wrl/client.h>
+
+#define CHECK(x, msg) { HRESULT __hr__ = x; if (FAILED(__hr__)) { LM_CORE_FATAL("{0}: {1}", msg, HrToString(__hr__)); abort(); } }
+
+using Microsoft::WRL::ComPtr;
+
+std::string HrToString(HRESULT hr);
+
+DXGI_FORMAT TranslateElementTypeToFormat(Lemon::RHI::ElementType type);
+
 // ===============================================
 // Translation helpers - RHI -> DirectX 12
 // ===============================================
@@ -11,17 +21,6 @@
 namespace Lemon::DX::Convert
 {
     using namespace RHI;
-
-    [[nodiscard]] constexpr DXGI_FORMAT ToFormat(const Format f) noexcept {
-        switch (f) {
-        case Format::RGBA8_UNORM:       return DXGI_FORMAT_R8G8B8A8_UNORM;
-        case Format::RGBA16_FLOAT:      return DXGI_FORMAT_R16G16B16A16_FLOAT;
-        case Format::RGBA32_FLOAT:      return DXGI_FORMAT_R32G32B32A32_FLOAT;
-        case Format::D32_FLOAT:         return DXGI_FORMAT_D32_FLOAT;
-        case Format::D24_UNORM_S8_UINT: return DXGI_FORMAT_D24_UNORM_S8_UINT;
-        default:                        return DXGI_FORMAT_UNKNOWN;
-        }
-    }
 
     [[nodiscard]] constexpr D3D12_SHADER_VISIBILITY ToVisibility(const ShaderStage s) noexcept {
         switch (s) {
@@ -50,12 +49,43 @@ namespace Lemon::DX::Convert
         }
     }
 
-    [[nodiscard]] constexpr DXGI_FORMAT ToVertexFormat(const Format f) noexcept {
-        return ToFormat(f); // reuse — same enum, different semantic use
+
+
+    [[nodiscard]] constexpr D3D12_HEAP_TYPE ToHeapType(MemoryUsage usage)
+    {
+        switch (usage)
+        {
+        case MemoryUsage::GPU_ONLY:   return D3D12_HEAP_TYPE_DEFAULT;
+        case MemoryUsage::CPU_TO_GPU: return D3D12_HEAP_TYPE_UPLOAD;
+        case MemoryUsage::GPU_TO_CPU: return D3D12_HEAP_TYPE_READBACK;
+        }
+        return D3D12_HEAP_TYPE_DEFAULT;
+    }
+
+    [[nodiscard]] constexpr D3D12_RESOURCE_STATES ToResourceState(MemoryUsage usage)
+    {
+        switch (usage)
+        {
+        case MemoryUsage::GPU_ONLY:   return D3D12_RESOURCE_STATE_COMMON;
+        case MemoryUsage::CPU_TO_GPU: return D3D12_RESOURCE_STATE_GENERIC_READ;
+        case MemoryUsage::GPU_TO_CPU: return D3D12_RESOURCE_STATE_COPY_DEST;
+        }
+        return D3D12_RESOURCE_STATE_COMMON;
     }
 
 
-    [[nodiscard]] constexpr DXGI_FORMAT TranslateElementTypeToFormat(const ElementType type) noexcept
+    [[nodiscard]] constexpr DXGI_FORMAT ToFormat(const Format f) noexcept {
+        switch (f) {
+        case Format::RGBA8_UNORM:       return DXGI_FORMAT_R8G8B8A8_UNORM;
+        case Format::RGBA16_FLOAT:      return DXGI_FORMAT_R16G16B16A16_FLOAT;
+        case Format::RGBA32_FLOAT:      return DXGI_FORMAT_R32G32B32A32_FLOAT;
+        case Format::D32_FLOAT:         return DXGI_FORMAT_D32_FLOAT;
+        case Format::D24_UNORM_S8_UINT: return DXGI_FORMAT_D24_UNORM_S8_UINT;
+        default:                        return DXGI_FORMAT_UNKNOWN;
+        }
+    }
+
+    [[nodiscard]] constexpr DXGI_FORMAT ToFormat(const ElementType type) noexcept
     {
         switch (type)
         {
@@ -89,6 +119,11 @@ namespace Lemon::DX::Convert
             return DXGI_FORMAT_UNKNOWN;
         }
     }
+
+    [[nodiscard]] constexpr DXGI_FORMAT ToVertexFormat(const Format f) noexcept {
+        return ToFormat(f); // reuse — same enum, different semantic use
+    }
+
 
 
 } // namespace RHI::DX::Convert

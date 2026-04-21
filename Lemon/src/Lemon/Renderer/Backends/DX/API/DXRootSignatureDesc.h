@@ -3,9 +3,10 @@
 
 #include <d3dx12.h>
 #include <d3d12.h>
-#include "DXUtils.h"
 #include <vector>
-#include <Lemon/Renderer/Backends/DX/DXShader.h>
+
+#include "Helpers.h"
+#include "../Pipelines/DXShader.h"
 
 
 namespace Lemon::DX

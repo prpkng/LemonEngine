@@ -10,10 +10,9 @@
 #include "Lemon/Window.h"
 #include "Platform/WindowsWindow.h"
 #include "Backends/DX/DXDevice.h"
-#include "Backends/DX/DXIndexBuffer.h"
-#include "Backends/DX/DXVertexBuffer.h"
+#include "Backends/DX/Resources/DXBuffer.h"
 
-#include "Backends/DX/DXShader.h"
+#include "Backends/DX/Pipelines/DXShader.h"
 #include "Backends/DX/API/DXGraphicsPSODesc.h"
 #include "Backends/DX/API/DXPSO.h"
 #include "Backends/DX/API/DXRootSignatureDesc.h"

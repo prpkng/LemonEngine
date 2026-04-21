@@ -4,7 +4,7 @@
 
 #include "DXGraphicsPSODesc.h"
 #include "DXRootSignatureDesc.h"
-#include "DXUtils.h"
+#include "Helpers.h"
 
 namespace Lemon::DX
 {
