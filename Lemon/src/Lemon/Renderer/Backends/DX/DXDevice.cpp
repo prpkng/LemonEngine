@@ -32,7 +32,7 @@ namespace Lemon::DX
     std::shared_ptr<RHI::IPipeline> DXDevice::CreatePipeline(const RHI::IPipeline::Desc& desc)
     {
         std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout;
-        for (auto vertexAttribute : desc.inputLayout)
+        for (const auto& vertexAttribute : desc.inputLayout)
         {
             inputLayout.push_back({
                 vertexAttribute.semanticName.c_str(),

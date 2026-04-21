@@ -16,6 +16,7 @@
 #include <numbers>
 
 #include "Backends/DX/API/DXPSO.h"
+#include "Backends/DX/API/TranslationHelpers.h"
 
 
 using namespace Lemon::RHI;
@@ -118,17 +119,34 @@ void TestDXLayer::InitSync(ComPtr<ID3D12Device> device) {
 void TestDXLayer::InitShaderPipeline(ComPtr<ID3D12Device> device) {
     // //Root signature is like have many object buffers and textures we want to use when drawing.
     // //For our rotating triangle, we only need a single constant that is going to be our angle
-    // IPipeline::Desc desc{};
-    // desc.vertexShaderPath = "shader.hlsl";
-    // desc.pixelShaderPath = "shader.hlsl";
-    // desc.renderTargetFormats = { Format::RGBA8_UNORM };
-    // desc.inputLayout = {
-    //     VertexAttribute { "POSITION", 0, ElementType::Float2, 0, 0, InputRate::PerVertex, 0 },
-    //     VertexAttribute { "COLOR",    0, ElementType::Float3, 0, 8, InputRate::PerVertex, 0 }
-    // };
-    // desc.rootParameters = {
-    //     RootParameter { RootParamType::Constants, 1, 0, 0, ShaderStage::Vertex }
-    // };
+    IPipeline::Desc desc{};
+    desc.vertexShaderPath = "shader.hlsl";
+    desc.pixelShaderPath = "shader.hlsl";
+    desc.renderTargetFormats = { Format::RGBA8_UNORM };
+    desc.inputLayout = {
+        VertexAttribute { "POSITION", 0, ElementType::Float2, 0, 0, InputRate::PerVertex, 0 },
+        VertexAttribute { "COLOR",    0, ElementType::Float3, 0, 8, InputRate::PerVertex, 0 }
+    };
+    desc.rootParameters = {
+        RootParameter { RootParamType::Constants, 1, 0, 0, ShaderStage::Vertex }
+    };
+
+
+    std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout;
+    for (const auto& vertexAttribute : desc.inputLayout)
+    {
+        inputLayout.push_back({
+            vertexAttribute.semanticName.c_str(),
+            vertexAttribute.semanticIndex,
+            Convert::TranslateElementTypeToFormat(vertexAttribute.format),
+            vertexAttribute.binding,
+            vertexAttribute.offset,
+            vertexAttribute.inputRate == InputRate::PerVertex
+                ? D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA
+                : D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA,
+            0
+        });
+    }
 
 
     DXShader vertexShader(L"shader.hlsl", ShaderStage::Vertex);
@@ -137,10 +155,10 @@ void TestDXLayer::InitShaderPipeline(ComPtr<ID3D12Device> device) {
     DXRootSignatureDesc rootDesc;
     rootDesc.AddConstant(1, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 
-    std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
-        { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        { "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 8, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
-    };
+    // std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
+    //     { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+    //     { "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 8, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+    // };
 
     DXGraphicsPSODesc psoDesc;
     psoDesc.SetVertexShader(vertexShader.GetBytecode(), vertexShader.GetLength())
