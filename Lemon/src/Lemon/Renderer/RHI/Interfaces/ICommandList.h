@@ -44,6 +44,23 @@ namespace Lemon::RHI
             u32 firstInstance  /// Default: 0
             ) = 0;
 
+        virtual void SetPrimitiveTopology(PrimitiveTopology topology) = 0;
+
+        // === Barriers ===
+        virtual void TransitionResource(void* resource,
+                                        ResourceState before,
+                                        ResourceState after) = 0;
+
+        // === Viewport / Scissor ===
+        virtual void SetViewport(const Viewport& viewport) = 0;
+        virtual void SetScissor(const ScissorRect& scissor) = 0;
+
+        // === Clear ===
+        virtual void ClearRenderTarget(void* renderTarget, const std::array<float, 4>& color) = 0;
+
+        // === Buffers ===
+        virtual void BindVertexBuffer(std::shared_ptr<IVertexBuffer> buffer) = 0;
+        virtual void BindIndexBuffer(std::shared_ptr<IIndexBuffer> buffer) = 0;
 
         // === Push constants / Root constants ===
 
@@ -51,8 +68,9 @@ namespace Lemon::RHI
         /// \code maps to SetGraphicsRoot32BitConstants | vkCmdPushConstants \endcode
         virtual void PushConstants(
             ShaderStage stage,
-            u32 offsetIn32BitWords,
-            std::span<const std::byte> data
+            const void* data,
+            size_t dataSize,
+            u32 offsetIn32BitWords
             ) = 0;
 
         // === BARRIERS ===

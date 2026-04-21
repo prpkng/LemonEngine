@@ -32,13 +32,26 @@ namespace Lemon::DX::Convert
         }
     }
 
-    [[nodiscard]] constexpr D3D12_PRIMITIVE_TOPOLOGY_TYPE ToTopology(const PrimitiveTopology t) noexcept {
+    [[nodiscard]] constexpr D3D12_PRIMITIVE_TOPOLOGY_TYPE ToTopologyType(const PrimitiveTopology t) noexcept {
         switch (t) {
         case PrimitiveTopology::TriangleList:
+        case PrimitiveTopology::TriangleFan:
         case PrimitiveTopology::TriangleStrip: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        case PrimitiveTopology::LineStrip:
         case PrimitiveTopology::LineList:      return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
         case PrimitiveTopology::PointList:     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
         default:                               return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
+        }
+    }
+    [[nodiscard]] constexpr D3D_PRIMITIVE_TOPOLOGY ToTopology(const PrimitiveTopology t) noexcept {
+        switch (t) {
+        case PrimitiveTopology::TriangleList:  return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        case PrimitiveTopology::TriangleStrip: return D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+        case PrimitiveTopology::TriangleFan: return D3D_PRIMITIVE_TOPOLOGY_TRIANGLEFAN;
+        case PrimitiveTopology::LineList: return D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+        case PrimitiveTopology::LineStrip: return D3D_PRIMITIVE_TOPOLOGY_LINESTRIP;
+        case PrimitiveTopology::PointList: return D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+        default: return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
         }
     }
 
@@ -132,6 +145,29 @@ namespace Lemon::DX::Convert
         case QueueType::Compute:  return D3D12_COMMAND_LIST_TYPE_COMPUTE;
         case QueueType::Copy:     return D3D12_COMMAND_LIST_TYPE_COPY;
         default:                  return D3D12_COMMAND_LIST_TYPE_DIRECT;
+        }
+    }
+
+    [[nodiscard]] constexpr D3D12_RESOURCE_STATES ToResourceState(const ResourceState state) noexcept
+    {
+        switch (state)
+        {
+        case ResourceState::Present:
+            return D3D12_RESOURCE_STATE_PRESENT;
+        case ResourceState::RenderTarget:
+            return D3D12_RESOURCE_STATE_RENDER_TARGET;
+        case ResourceState::DepthWrite:
+            return D3D12_RESOURCE_STATE_DEPTH_WRITE;
+        case ResourceState::DepthRead:
+            return D3D12_RESOURCE_STATE_DEPTH_READ;
+        case ResourceState::ShaderResource:
+            return D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+        case ResourceState::CopySource:
+            return D3D12_RESOURCE_STATE_COPY_SOURCE;
+        case ResourceState::CopyDest:
+            return D3D12_RESOURCE_STATE_COPY_DEST;
+        default:
+            return D3D12_RESOURCE_STATE_PRESENT;
         }
     }
 

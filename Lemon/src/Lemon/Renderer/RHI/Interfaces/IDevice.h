@@ -22,8 +22,8 @@ namespace Lemon::RHI
         virtual ~IDevice() = default;
 
         [[nodiscard]] virtual std::shared_ptr<IBuffer> CreateBuffer(const IBuffer::Desc& desc) = 0;
-        [[nodiscard]] virtual std::shared_ptr<VertexBuffer> CreateVertexBuffer(const VertexBuffer::Desc& desc) = 0;
-        [[nodiscard]] virtual std::shared_ptr<IndexBuffer> CreateIndexBuffer(const IndexBuffer::Desc& desc) = 0;
+        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(const IVertexBuffer::Desc& desc) = 0;
+        [[nodiscard]] virtual std::shared_ptr<IIndexBuffer> CreateIndexBuffer(const IIndexBuffer::Desc& desc) = 0;
         [[nodiscard]] virtual std::shared_ptr<IPipeline> CreatePipeline(const IPipeline::Desc& desc) = 0;
         [[nodiscard]] virtual std::shared_ptr<ICommandQueue> CreateCommandQueue(QueueType type) = 0;
     private:

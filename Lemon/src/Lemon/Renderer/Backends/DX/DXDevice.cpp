@@ -18,12 +18,12 @@ namespace Lemon::DX
         return std::make_shared<DXBuffer>(shared_from_this(), desc);
     }
 
-    std::shared_ptr<RHI::VertexBuffer> DXDevice::CreateVertexBuffer(const RHI::VertexBuffer::Desc& desc)
+    std::shared_ptr<RHI::IVertexBuffer> DXDevice::CreateVertexBuffer(const RHI::IVertexBuffer::Desc& desc)
     {
         return std::make_shared<DXVertexBuffer>(shared_from_this(), desc);
     }
 
-    std::shared_ptr<RHI::IndexBuffer> DXDevice::CreateIndexBuffer(const RHI::IndexBuffer::Desc& desc)
+    std::shared_ptr<RHI::IIndexBuffer> DXDevice::CreateIndexBuffer(const RHI::IIndexBuffer::Desc& desc)
     {
         return std::make_shared<DXIndexBuffer>(shared_from_this(), desc);
     }
@@ -75,7 +75,7 @@ namespace Lemon::DX
             .SetVertexShader(vertexShader.GetBytecode(), vertexShader.GetLength())
             .SetPixelShader(pixelShader.GetBytecode(), pixelShader.GetLength())
             .SetInputLayout(std::move(inputLayout))
-            .SetTopology(Convert::ToTopology(desc.topology))
+            .SetTopology(Convert::ToTopologyType(desc.topology))
 
             .SetBlendDesc(desc.blendState)
             .SetDepthStencilDesc(desc.depthStencilState)

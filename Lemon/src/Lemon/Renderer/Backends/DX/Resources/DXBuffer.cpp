@@ -80,7 +80,7 @@ namespace Lemon::DX
     }
 
 
-    DXVertexBuffer::DXVertexBuffer(std::shared_ptr<DXDevice> device, const Desc& desc) : VertexBuffer(desc)
+    DXVertexBuffer::DXVertexBuffer(std::shared_ptr<DXDevice> device, const Desc& desc) : IVertexBuffer(desc)
     {
         m_Buffer = device->CreateBuffer(desc.bufferDesc);
 
@@ -91,7 +91,7 @@ namespace Lemon::DX
         m_VertexBufferView.StrideInBytes = desc.layout.stride;
     }
 
-    DXIndexBuffer::DXIndexBuffer(std::shared_ptr<DXDevice> device, const Desc& desc) : IndexBuffer(desc)
+    DXIndexBuffer::DXIndexBuffer(std::shared_ptr<DXDevice> device, const Desc& desc) : IIndexBuffer(desc)
     {
         m_Buffer = device->CreateBuffer(desc.bufferDesc);
 

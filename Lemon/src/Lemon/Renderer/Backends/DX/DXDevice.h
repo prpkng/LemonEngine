@@ -22,8 +22,8 @@ namespace Lemon::DX
         };
 
         [[nodiscard]] std::shared_ptr<RHI::IBuffer> CreateBuffer(const RHI::IBuffer::Desc& desc) override;
-        [[nodiscard]] std::shared_ptr<RHI::VertexBuffer> CreateVertexBuffer(const RHI::VertexBuffer::Desc& desc) override;
-        [[nodiscard]] std::shared_ptr<RHI::IndexBuffer> CreateIndexBuffer(const RHI::IndexBuffer::Desc& desc) override;
+        [[nodiscard]] std::shared_ptr<RHI::IVertexBuffer> CreateVertexBuffer(const RHI::IVertexBuffer::Desc& desc) override;
+        [[nodiscard]] std::shared_ptr<RHI::IIndexBuffer> CreateIndexBuffer(const RHI::IIndexBuffer::Desc& desc) override;
         [[nodiscard]] std::shared_ptr<RHI::IPipeline> CreatePipeline(const RHI::IPipeline::Desc& desc) override;
         [[nodiscard]] std::shared_ptr<RHI::ICommandQueue> CreateCommandQueue(RHI::QueueType type) override;
 

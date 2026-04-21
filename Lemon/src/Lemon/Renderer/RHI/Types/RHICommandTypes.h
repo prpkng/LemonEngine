@@ -12,5 +12,25 @@ namespace Lemon::RHI
         Copy,     /// DX12: D3D12_COMMAND_LIST_TYPE_COPY      | Vulkan: VK_QUEUE_TRANSFER_BIT
     };
 
+    struct Viewport {
+        float x, y, width, height;
+        float minDepth = 0.0f, maxDepth = 1.0f;
+    };
+
+    struct ScissorRect {
+        int32_t left, top, right, bottom;
+    };
+
+    // Resource state for barrier abstraction
+    // DX12: D3D12_RESOURCE_STATE | Vulkan: VkImageLayout + VkAccessFlags
+    enum class ResourceState : uint32_t {
+        Present,
+        RenderTarget,
+        DepthWrite,
+        DepthRead,
+        ShaderResource,
+        CopySource,
+        CopyDest,
+    };
 
 }

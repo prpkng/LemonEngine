@@ -6,7 +6,7 @@
 
 namespace Lemon::DX
 {
-    class DXCommandList : public RHI::ICommandList
+    class DXCommandList final : public RHI::ICommandList
     {
     public:
         DXCommandList(ComPtr<ID3D12GraphicsCommandList> cmdList, ComPtr<ID3D12CommandAllocator> allocator,
@@ -19,8 +19,26 @@ namespace Lemon::DX
         void Draw(u32 vertexCount, u32 instanceCount, u32 firstVertex, u32 firstInstance) override;
         void DrawIndexed(u32 indexCount, u32 instanceCount, u32 firstIndex, i32 vertexOffset,
                          u32 firstInstance) override;
-        void PushConstants(RHI::ShaderStage stage, u32 offsetIn32BitWords, std::span<const std::byte> data) override;
 
+        void PushConstants(RHI::ShaderStage stage, const void* data, size_t dataSize, u32 offsetIn32BitWords) override;
+
+        void SetPrimitiveTopology(RHI::PrimitiveTopology topology) override;
+
+        // === Barriers ===
+        void TransitionResource(void* resource,
+                                        RHI::ResourceState before,
+                                        RHI::ResourceState after) override;
+
+        // === Viewport / Scissor ===
+        void SetViewport(const RHI::Viewport& viewport) override;
+        void SetScissor(const RHI::ScissorRect& scissor) override;
+
+        // === Clear ===
+        void ClearRenderTarget(void* renderTarget, const std::array<float, 4>& color) override;
+
+        // === Buffers ===
+        void BindVertexBuffer(std::shared_ptr<RHI::IVertexBuffer> buffer) override;
+        void BindIndexBuffer(std::shared_ptr<RHI::IIndexBuffer> buffer) override;
         // -----------------------------------------------------------------------
         // Internal access for DX12CommandQueue
         // -----------------------------------------------------------------------

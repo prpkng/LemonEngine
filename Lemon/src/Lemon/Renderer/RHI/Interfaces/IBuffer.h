@@ -32,7 +32,7 @@ namespace Lemon::RHI
         MemoryUsage m_MemoryUsage;
     };
 
-    struct VertexBuffer
+    struct IVertexBuffer
     {
         struct Desc
         {
@@ -40,8 +40,8 @@ namespace Lemon::RHI
             VertexLayout layout{};
             u32 binding{};
         };
-        explicit VertexBuffer(const Desc& desc) : m_Layout(desc.layout), m_Binding(desc.binding) {}
-        virtual ~VertexBuffer() = default;
+        explicit IVertexBuffer(const Desc& desc) : m_Layout(desc.layout), m_Binding(desc.binding) {}
+        virtual ~IVertexBuffer() = default;
 
         virtual const std::shared_ptr<IBuffer> GetBuffer() const = 0;
         [[nodiscard]] const VertexLayout& GetLayout() const { return m_Layout; };
@@ -52,7 +52,7 @@ namespace Lemon::RHI
 
     };
 
-    struct IndexBuffer
+    struct IIndexBuffer
     {
         struct Desc
         {
@@ -60,8 +60,8 @@ namespace Lemon::RHI
             u32 binding{};
             ElementType indexType = ElementType::Uint;
         };
-        explicit IndexBuffer(const Desc& desc) : m_Binding(desc.binding), m_IndexType(desc.indexType) {}
-        virtual ~IndexBuffer() = default;
+        explicit IIndexBuffer(const Desc& desc) : m_Binding(desc.binding), m_IndexType(desc.indexType) {}
+        virtual ~IIndexBuffer() = default;
 
         virtual const std::shared_ptr<IBuffer> GetBuffer() const = 0;
         [[nodiscard]] constexpr ElementType GetIndexType() const { return m_IndexType; }

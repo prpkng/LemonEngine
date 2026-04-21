@@ -165,7 +165,7 @@ void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice) {
     desc.size = vertices.size() * sizeof(Vertex);
     desc.usage = BufferUsage::Vertex;
 
-    VertexBuffer::Desc vertexDesc {};
+    IVertexBuffer::Desc vertexDesc {};
     vertexDesc.bufferDesc = desc;
     vertexDesc.layout = VertexLayoutBuilder()
                     .WithElement("POSITION", ElementType::Float2)
@@ -178,7 +178,7 @@ void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice) {
     desc.size = indices.size() * sizeof(uint16_t);
     desc.usage = BufferUsage::Index;
 
-    IndexBuffer::Desc indexDesc = {
+    IIndexBuffer::Desc indexDesc = {
         .bufferDesc = desc,
         .indexType = ElementType::Ushort,
     };
@@ -222,6 +222,7 @@ TestDXLayer::~TestDXLayer() {
 
 void TestDXLayer::OnUpdate() {
     static UINT triangleAngle = 0;
+    static UINT triangleColor = 0;
 
     // --- Throttle: wait on the OLDEST frame slot before reusing it ---
     // On frames 0 and 1 this value is 0, so CpuWaitForValue returns immediately.
@@ -231,81 +232,46 @@ void TestDXLayer::OnUpdate() {
         graphicsQueue->CpuWaitForValue(waitValue);
 
 
-    std::unique_ptr<DXCommandList> cmdList(static_cast<DXCommandList*>(graphicsQueue->GetCommandList().release()));
+    const std::unique_ptr<DXCommandList> cmdList(static_cast<DXCommandList*>(graphicsQueue->GetCommandList().release()));
     cmdList->Begin();
-    // CHECK(commandAllocator->Reset(), "Failed to reset command allocator");
 
-    // Record commands to draw a triangle
-    // CHECK(commandList->Reset(commandAllocator, nullptr), "Failed to reset command list");
+    const UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
-    UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
-
-    {
-        D3D12_RESOURCE_BARRIER barrier = {};
-        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-        barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        barrier.Transition.pResource = renderTargets[backBufferIndex];
-        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-        barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        cmdList->GetHandle()->ResourceBarrier(1, &barrier);
-    }
+    // Transition the backBuffer to the render target state
+    cmdList->TransitionResource(renderTargets[backBufferIndex], ResourceState::Present, ResourceState::RenderTarget);
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
     rtvHandle.ptr += backBufferIndex * rtvIncrementSize;
 
     // Clear the render target
-    float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-    cmdList->GetHandle()->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    cmdList->ClearRenderTarget(&rtvHandle, { 0.0f, 0.2f, 0.4f, 1.0f });
 
     // Set viewport and scissor
-    D3D12_VIEWPORT viewport = { 0.0f, 0.0f, static_cast<float>(window->GetWidth()), static_cast<float>(window->GetHeight()), 0.0f, 1.0f};
-    D3D12_RECT scissorRect = {0, 0, LONG_MAX, LONG_MAX };
-    cmdList->GetHandle()->RSSetViewports(1, &viewport);
-    cmdList->GetHandle()->RSSetScissorRects(1, &scissorRect);
+    cmdList->SetViewport({ 0.0f, 0.0f, static_cast<float>(window->GetWidth()), static_cast<float>(window->GetHeight()), 0.0f, 0.0f});
+    cmdList->SetScissor({0, 0, LONG_MAX, LONG_MAX });
 
     cmdList->GetHandle()->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-    cmdList->GetHandle()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    // cmdList->GetHandle()->SetGraphicsRootSignature(pipeline->GetRootSignature().Get());
-    // cmdList->GetHandle()->SetPipelineState(pipeline->GetPSO().Get());
+
+    cmdList->SetPrimitiveTopology(PrimitiveTopology::TriangleList);
     cmdList->BindPipeline(pipeline);
-    cmdList->GetHandle()->SetGraphicsRoot32BitConstant(0, triangleAngle, 0);
-    cmdList->GetHandle()->IASetVertexBuffers(0, 1, vertexBuffer->GetBufferView());
-    cmdList->GetHandle()->IASetIndexBuffer(indexBuffer->GetBufferView());
+    cmdList->PushConstants(ShaderStage::Vertex, &triangleAngle, 4, 0);
+    cmdList->BindVertexBuffer(vertexBuffer);
+    cmdList->BindIndexBuffer(indexBuffer);
     cmdList->DrawIndexed(SIDE_COUNT*3, 1, 0, 0, 0);
 
-    {
-        D3D12_RESOURCE_BARRIER barrier = {};
-        barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-        barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-        barrier.Transition.pResource = renderTargets[backBufferIndex];
-        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-        barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-        cmdList->GetHandle()->ResourceBarrier(1, &barrier);
-    }
+    // Transition the backBuffer to the present state
+    cmdList->TransitionResource(renderTargets[backBufferIndex], ResourceState::RenderTarget, ResourceState::Present);
 
     cmdList->End();
-    // CHECK(cmdList->GetHandle()->Close(), "Failed to close command list");
 
     const u64 frameDone = graphicsQueue->SubmitSingle(*cmdList);
-    // cmdQueue->ExecuteCommandLists(1, commandLists);
 
     CHECK(swapChain->Present(1, 0), "Failed to present swap chain");
 
-    graphicsQueue->CpuWaitForValue(frameDone - 1);
-
     //Wait on the CPU for the GPU frame to finish
-    // const UINT64 currentFenceValue = ++fenceValue;
-    // CHECK(commandQueue->Signal(fence, currentFenceValue), "Failed to signal the fence");
-
-    // if (fence->GetCompletedValue() < currentFenceValue) {
-    //     CHECK(fence->SetEventOnCompletion(currentFenceValue, fenceEvent), "Failed to set fence completion");
-    //     WaitForSingleObject(fenceEvent, INFINITE);
-    // }
-
-
+    graphicsQueue->CpuWaitForValue(frameDone - 1);
 
     frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
     triangleAngle+=2;
+    triangleColor = (triangleColor + 1) % 255;
 }
