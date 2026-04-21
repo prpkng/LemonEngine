@@ -4,7 +4,7 @@
 
 #include "DXIndexBuffer.h"
 
-#include "DXUtils.h"
+#include "API/DXUtils.h"
 #include "DXBuffer.h"
 
 namespace Lemon::DX

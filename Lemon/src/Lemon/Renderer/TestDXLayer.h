@@ -13,6 +13,11 @@
 #include "Backends/DX/DXIndexBuffer.h"
 #include "Backends/DX/DXVertexBuffer.h"
 
+#include "Backends/DX/DXShader.h"
+#include "Backends/DX/API/DXGraphicsPSODesc.h"
+#include "Backends/DX/API/DXPSO.h"
+#include "Backends/DX/API/DXRootSignatureDesc.h"
+
 class TestDXLayer : public Lemon::Layer {
 public:
     void InitCommandQueue(ComPtr<ID3D12Device> device);
@@ -35,8 +40,7 @@ public:
 private:
     Lemon::WindowsWindow* window;
 
-    ID3D12RootSignature* rootSignature;
-    ID3D12PipelineState* pipelineState;
+    Lemon::DX::DXPipelineStateObject pso;
 
     ID3D12CommandQueue* commandQueue;
     ID3D12CommandAllocator* commandAllocator;

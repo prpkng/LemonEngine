@@ -7,7 +7,7 @@ namespace Lemon::RHI
     {
     }
 
-    VertexLayoutBuilder& VertexLayoutBuilder::WithElement(const std::string& name, VertexElementType type,
+    VertexLayoutBuilder& VertexLayoutBuilder::WithElement(const std::string& name, ElementType type,
                                                           const bool addToAccumulation)
     {
         m_Elements.emplace_back(VertexElement {name, type, m_AccumulatedOffset});

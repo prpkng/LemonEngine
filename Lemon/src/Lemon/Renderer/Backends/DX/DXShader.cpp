@@ -1,4 +1,4 @@
-#include "DXShaderPiece.h"
+#include "DXShader.h"
 
 #include <Lemon/Core.h>
 #include <d3dcompiler.h>
@@ -7,26 +7,26 @@
 
 namespace Lemon::DX
 {
-    const char* ShaderTypeToEntryPointName(const RHI::ShaderPieceType type)
+    const char* ShaderTypeToEntryPointName(const RHI::ShaderStage type)
     {
         switch (type)
         {
-        case RHI::ShaderPieceType::Vertex:
+        case RHI::ShaderStage::Vertex:
             return "VSMain";
-        case RHI::ShaderPieceType::Pixel:
+        case RHI::ShaderStage::Pixel:
             return "PSMain";
         default:
             LM_CORE_FATAL("Shader type unimplemented: {0}", magic_enum::enum_name(type));
             return "";
         }
     }
-    const char* ShaderTypeToEntryTarget(const RHI::ShaderPieceType type)
+    const char* ShaderTypeToEntryTarget(const RHI::ShaderStage type)
     {
         switch (type)
         {
-        case RHI::ShaderPieceType::Vertex:
+        case RHI::ShaderStage::Vertex:
             return "vs_5_0";
-        case RHI::ShaderPieceType::Pixel:
+        case RHI::ShaderStage::Pixel:
             return "ps_5_0";
         default:
             LM_CORE_FATAL("Shader type unimplemented: {0}", magic_enum::enum_name(type));
@@ -34,12 +34,12 @@ namespace Lemon::DX
         }
     }
 
-    DXShaderPiece::DXShaderPiece(const std::wstring& filePath, const RHI::ShaderPieceType type) : ShaderPiece()
+    DXShader::DXShader(const std::wstring& filePath, const RHI::ShaderStage type) : IShader()
     {
-        DXShaderPiece::Compile(filePath, type);
+        DXShader::Compile(filePath, type);
     }
 
-    void DXShaderPiece::Compile(const std::wstring& filePath, const RHI::ShaderPieceType type)
+    void DXShader::Compile(const std::wstring& filePath, const RHI::ShaderStage type)
     {
         ComPtr<ID3DBlob> errorMsgBlob = nullptr;
         const HRESULT hr = D3DCompileFromFile(
@@ -67,12 +67,12 @@ namespace Lemon::DX
         }
     }
 
-    const void* DXShaderPiece::GetBytecode()
+    const void* DXShader::GetBytecode()
     {
         return m_Handle->GetBufferPointer();
     }
 
-    size_t DXShaderPiece::GetLength()
+    size_t DXShader::GetLength()
     {
         return m_Handle->GetBufferSize();
     }

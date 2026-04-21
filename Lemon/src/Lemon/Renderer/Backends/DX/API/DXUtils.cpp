@@ -67,37 +67,37 @@ std::string HrToString(const HRESULT hr)
     return oss.str();
 }
 
-DXGI_FORMAT TranslateElementTypeToFormat(const Lemon::RHI::VertexElementType type)
+DXGI_FORMAT TranslateElementTypeToFormat(const Lemon::RHI::ElementType type)
 {
     switch (type)
     {
-    case Lemon::RHI::VertexElementType::Float:  return DXGI_FORMAT_R32_FLOAT;
-    case Lemon::RHI::VertexElementType::Float2: return DXGI_FORMAT_R32G32_FLOAT;
-    case Lemon::RHI::VertexElementType::Float3: return DXGI_FORMAT_R32G32B32_FLOAT;
-    case Lemon::RHI::VertexElementType::Float4: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+    case Lemon::RHI::ElementType::Float:  return DXGI_FORMAT_R32_FLOAT;
+    case Lemon::RHI::ElementType::Float2: return DXGI_FORMAT_R32G32_FLOAT;
+    case Lemon::RHI::ElementType::Float3: return DXGI_FORMAT_R32G32B32_FLOAT;
+    case Lemon::RHI::ElementType::Float4: return DXGI_FORMAT_R32G32B32A32_FLOAT;
 
-    case Lemon::RHI::VertexElementType::Int:  return DXGI_FORMAT_R32_SINT;
-    case Lemon::RHI::VertexElementType::Int2: return DXGI_FORMAT_R32G32_SINT;
-    case Lemon::RHI::VertexElementType::Int3: return DXGI_FORMAT_R32G32B32_SINT;
-    case Lemon::RHI::VertexElementType::Int4: return DXGI_FORMAT_R32G32B32A32_SINT;
+    case Lemon::RHI::ElementType::Int:  return DXGI_FORMAT_R32_SINT;
+    case Lemon::RHI::ElementType::Int2: return DXGI_FORMAT_R32G32_SINT;
+    case Lemon::RHI::ElementType::Int3: return DXGI_FORMAT_R32G32B32_SINT;
+    case Lemon::RHI::ElementType::Int4: return DXGI_FORMAT_R32G32B32A32_SINT;
 
-    case Lemon::RHI::VertexElementType::Uint:  return DXGI_FORMAT_R32_UINT;
-    case Lemon::RHI::VertexElementType::Uint2: return DXGI_FORMAT_R32G32_UINT;
-    case Lemon::RHI::VertexElementType::Uint3: return DXGI_FORMAT_R32G32B32_UINT;
-    case Lemon::RHI::VertexElementType::Uint4: return DXGI_FORMAT_R32G32B32A32_UINT;
+    case Lemon::RHI::ElementType::Uint:  return DXGI_FORMAT_R32_UINT;
+    case Lemon::RHI::ElementType::Uint2: return DXGI_FORMAT_R32G32_UINT;
+    case Lemon::RHI::ElementType::Uint3: return DXGI_FORMAT_R32G32B32_UINT;
+    case Lemon::RHI::ElementType::Uint4: return DXGI_FORMAT_R32G32B32A32_UINT;
 
-    case Lemon::RHI::VertexElementType::Ushort:  return DXGI_FORMAT_R16_UINT;
-    case Lemon::RHI::VertexElementType::Ushort2: return DXGI_FORMAT_R16G16_UINT;
-    case Lemon::RHI::VertexElementType::Ushort4: return DXGI_FORMAT_R16G16B16A16_UINT;
+    case Lemon::RHI::ElementType::Ushort:  return DXGI_FORMAT_R16_UINT;
+    case Lemon::RHI::ElementType::Ushort2: return DXGI_FORMAT_R16G16_UINT;
+    case Lemon::RHI::ElementType::Ushort4: return DXGI_FORMAT_R16G16B16A16_UINT;
 
-    case Lemon::RHI::VertexElementType::Ubyte4:  return DXGI_FORMAT_R8G8B8A8_UINT;
-    case Lemon::RHI::VertexElementType::Ubyte4N:  return DXGI_FORMAT_R8G8B8A8_UNORM;
-    case Lemon::RHI::VertexElementType::Byte4:  return DXGI_FORMAT_R8G8B8A8_SINT;
-    case Lemon::RHI::VertexElementType::Byte4N:  return DXGI_FORMAT_R8G8B8A8_SNORM;
+    case Lemon::RHI::ElementType::Ubyte4:  return DXGI_FORMAT_R8G8B8A8_UINT;
+    case Lemon::RHI::ElementType::Ubyte4N:  return DXGI_FORMAT_R8G8B8A8_UNORM;
+    case Lemon::RHI::ElementType::Byte4:  return DXGI_FORMAT_R8G8B8A8_SINT;
+    case Lemon::RHI::ElementType::Byte4N:  return DXGI_FORMAT_R8G8B8A8_SNORM;
 
 
     default:
-        LM_CORE_ERROR("Unknown VertexElementType");
+        LM_CORE_ERROR("Unknown ElementType");
         return DXGI_FORMAT_UNKNOWN;
     }
 }

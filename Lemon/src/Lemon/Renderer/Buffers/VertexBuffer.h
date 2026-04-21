@@ -2,32 +2,15 @@
 #include <lmpch.h>
 
 #include "Buffer.h"
-
+#include <Lemon/Renderer/RHITypes.h>
 
 namespace Lemon::RHI
 {
 
-    enum class VertexElementType
-    {
-        Float, Float2, Float3, Float4,
-        Int, Int2, Int3, Int4,
-        Uint, Uint2, Uint3, Uint4,
-        Byte4, Byte4N, Ubyte4, Ubyte4N,
-        Ushort, Ushort2, Ushort4,
-        Short2, Short2N,
-        Short4, Short4N,
-    };
-
-    enum class InputRate
-    {
-        PerVertex,
-        PerInstance
-    };
-
     struct VertexElement
     {
         std::string name;
-        VertexElementType type;
+        ElementType type;
         uint32_t offset;
     };
 
@@ -60,47 +43,47 @@ namespace Lemon::RHI
     };
 
 
-    inline uint32_t GetVertexElementSize(VertexElementType type)
+    inline uint32_t GetVertexElementSize(ElementType type)
     {
         switch (type)
         {
             // ===== FLOAT =====
-        case VertexElementType::Float:  return 4;
-        case VertexElementType::Float2: return 8;
-        case VertexElementType::Float3: return 12;
-        case VertexElementType::Float4: return 16;
+        case ElementType::Float:  return 4;
+        case ElementType::Float2: return 8;
+        case ElementType::Float3: return 12;
+        case ElementType::Float4: return 16;
 
             // ===== SIGNED INT =====
-        case VertexElementType::Int:  return 4;
-        case VertexElementType::Int2: return 8;
-        case VertexElementType::Int3: return 12;
-        case VertexElementType::Int4: return 16;
+        case ElementType::Int:  return 4;
+        case ElementType::Int2: return 8;
+        case ElementType::Int3: return 12;
+        case ElementType::Int4: return 16;
 
             // ===== UNSIGNED INT =====
-        case VertexElementType::Uint:  return 4;
-        case VertexElementType::Uint2: return 8;
-        case VertexElementType::Uint3: return 12;
-        case VertexElementType::Uint4: return 16;
+        case ElementType::Uint:  return 4;
+        case ElementType::Uint2: return 8;
+        case ElementType::Uint3: return 12;
+        case ElementType::Uint4: return 16;
 
             // ===== 8-bit (4 components) =====
-        case VertexElementType::Byte4:
-        case VertexElementType::Byte4N:
-        case VertexElementType::Ubyte4:
-        case VertexElementType::Ubyte4N:
+        case ElementType::Byte4:
+        case ElementType::Byte4N:
+        case ElementType::Ubyte4:
+        case ElementType::Ubyte4N:
             return 4; // 4 * 1 byte
 
             // ===== 16-bit (2 components) =====
-        case VertexElementType::Short2:
-        case VertexElementType::Short2N:
+        case ElementType::Short2:
+        case ElementType::Short2N:
             return 4; // 2 * 2 bytes
 
             // ===== 16-bit (4 components) =====
-        case VertexElementType::Short4:
-        case VertexElementType::Short4N:
+        case ElementType::Short4:
+        case ElementType::Short4N:
             return 8; // 4 * 2 bytes
 
         default:
-            assert(false && "Unknown VertexElementType");
+            assert(false && "Unknown ElementType");
             return 0;
         }
     }

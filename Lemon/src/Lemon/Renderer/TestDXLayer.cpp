@@ -7,7 +7,7 @@
 
 #include "Backends/DX/DXBuffer.h"
 #include "Backends/DX/DXDevice.h"
-#include "Backends/DX/DXUtils.h"
+#include "Backends/DX/API/DXUtils.h"
 #include "Helpers/VertexLayoutBuilder.h"
 #include "Platform/WindowsWindow.h"
 #include "SDL3/SDL_properties.h"
@@ -15,7 +15,8 @@
 #include <cmath>
 #include <numbers>
 
-#include "Backends/DX/DXShaderPiece.h"
+#include "Backends/DX/API/DXPSO.h"
+
 
 using namespace Lemon::RHI;
 using namespace Lemon::DX;
@@ -115,77 +116,39 @@ void TestDXLayer::InitSync(ComPtr<ID3D12Device> device) {
 }
 
 void TestDXLayer::InitShaderPipeline(ComPtr<ID3D12Device> device) {
-    //Root signature is like have many object buffers and textures we want to use when drawing.
-    //For our rotating triangle, we only need a single constant that is going to be our angle
+    // //Root signature is like have many object buffers and textures we want to use when drawing.
+    // //For our rotating triangle, we only need a single constant that is going to be our angle
+    // IPipeline::Desc desc{};
+    // desc.vertexShaderPath = "shader.hlsl";
+    // desc.pixelShaderPath = "shader.hlsl";
+    // desc.renderTargetFormats = { Format::RGBA8_UNORM };
+    // desc.inputLayout = {
+    //     VertexAttribute { "POSITION", 0, ElementType::Float2, 0, 0, InputRate::PerVertex, 0 },
+    //     VertexAttribute { "COLOR",    0, ElementType::Float3, 0, 8, InputRate::PerVertex, 0 }
+    // };
+    // desc.rootParameters = {
+    //     RootParameter { RootParamType::Constants, 1, 0, 0, ShaderStage::Vertex }
+    // };
 
-    CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
-    rootParameters[0].InitAsConstants(1, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 
-    rootSignature = nullptr;
-    CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-    rootSignatureDesc.Init(
-        _countof(rootParameters),
-        rootParameters,
-        0,
-        nullptr,
-        D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+    DXShader vertexShader(L"shader.hlsl", ShaderStage::Vertex);
+    DXShader pixelShader(L"shader.hlsl", ShaderStage::Pixel);
 
-    ComPtr<ID3DBlob> signatureBlob = nullptr;
-    ComPtr<ID3DBlob> errorBlob = nullptr;
+    DXRootSignatureDesc rootDesc;
+    rootDesc.AddConstant(1, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 
-    CHECK(D3D12SerializeRootSignature(
-        &rootSignatureDesc,
-        D3D_ROOT_SIGNATURE_VERSION_1,
-        &signatureBlob,
-        &errorBlob),
-        "Failed to serialize root signature");
-
-    CHECK(device->CreateRootSignature(
-        0,
-        signatureBlob->GetBufferPointer(),
-        signatureBlob->GetBufferSize(),
-        IID_PPV_ARGS(&rootSignature)),
-        "Failed to create root signature");
-
-    DXShaderPiece vertexShader(L"shader.hlsl", ShaderPieceType::Vertex);
-    DXShaderPiece pixelShader(L"shader.hlsl", ShaderPieceType::Pixel);
-
-    // Pipeline state
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-    psoDesc.pRootSignature = rootSignature;
-
-    psoDesc.VS.pShaderBytecode = vertexShader.GetBytecode();
-    psoDesc.VS.BytecodeLength = vertexShader.GetLength();
-
-    psoDesc.PS.pShaderBytecode = pixelShader.GetBytecode();
-    psoDesc.PS.BytecodeLength = pixelShader.GetLength();
-
-    psoDesc.SampleMask = UINT_MAX;
-
-    psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-    // psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-    psoDesc.BlendState      = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-    psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-
-    static D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+    std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout = {
         { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         { "COLOR",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 8, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
     };
 
-    psoDesc.InputLayout.pInputElementDescs = inputLayout;
-    psoDesc.InputLayout.NumElements = _countof(inputLayout);
+    DXGraphicsPSODesc psoDesc;
+    psoDesc.SetVertexShader(vertexShader.GetBytecode(), vertexShader.GetLength())
+           .SetPixelShader(pixelShader.GetBytecode(), pixelShader.GetLength())
+           .SetInputLayout(std::move(inputLayout))
+           .SetRenderTargetFormat(DXGI_FORMAT_R8G8B8A8_UNORM);
 
-    psoDesc.IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED;
-    psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-
-    psoDesc.NumRenderTargets = 1;
-    psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-
-    psoDesc.SampleDesc.Count = 1;
-    psoDesc.SampleDesc.Quality = 0;
-
-    pipelineState = nullptr;
-    CHECK(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)), "Failed to create pipeline state");
+    pso = DXPipelineStateObject::Create(device, rootDesc, psoDesc);
 }
 
 constexpr int SIDE_COUNT = 6;
@@ -220,8 +183,8 @@ void TestDXLayer::InitBuffers(const std::unique_ptr<DXDevice>& dxDevice) {
     VertexBuffer::Desc vertexDesc {};
     vertexDesc.bufferDesc = desc;
     vertexDesc.layout = VertexLayoutBuilder()
-                    .WithElement("POSITION", VertexElementType::Float2)
-                    .WithElement("COLOR", VertexElementType::Float3)
+                    .WithElement("POSITION", ElementType::Float2)
+                    .WithElement("COLOR", ElementType::Float3)
                     .Build();
 
     vertexBuffer = std::dynamic_pointer_cast<DXVertexBuffer>(dxDevice->CreateVertexBuffer(vertexDesc));
@@ -232,7 +195,7 @@ void TestDXLayer::InitBuffers(const std::unique_ptr<DXDevice>& dxDevice) {
 
     IndexBuffer::Desc indexDesc = {
         .bufferDesc = desc,
-        .indexType = VertexElementType::Ushort,
+        .indexType = ElementType::Ushort,
     };
 
     auto idxBuffer = dxDevice->CreateBuffer(desc);
@@ -306,8 +269,8 @@ void TestDXLayer::OnUpdate() {
 
     commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    commandList->SetGraphicsRootSignature(rootSignature);
-    commandList->SetPipelineState(pipelineState);
+    commandList->SetGraphicsRootSignature(pso.GetRootSignature().Get());
+    commandList->SetPipelineState(pso.GetPSO().Get());
 
     commandList->SetGraphicsRoot32BitConstant(0, triangleAngle, 0);
     commandList->IASetVertexBuffers(0, 1, vertexBuffer->GetBufferView());

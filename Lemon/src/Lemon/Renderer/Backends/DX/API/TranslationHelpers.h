@@ -1,0 +1,94 @@
+#pragma once
+
+#include <dxgi.h>
+#include <Lemon/Renderer/RHITypes.h>
+#include <Lemon/Core.h>
+
+// ===============================================
+// Translation helpers - RHI -> DirectX 12
+// ===============================================
+
+namespace Lemon::DX::Convert
+{
+    using namespace RHI;
+
+    [[nodiscard]] constexpr DXGI_FORMAT ToFormat(const Format f) noexcept {
+        switch (f) {
+        case Format::RGBA8_UNORM:       return DXGI_FORMAT_R8G8B8A8_UNORM;
+        case Format::RGBA16_FLOAT:      return DXGI_FORMAT_R16G16B16A16_FLOAT;
+        case Format::RGBA32_FLOAT:      return DXGI_FORMAT_R32G32B32A32_FLOAT;
+        case Format::D32_FLOAT:         return DXGI_FORMAT_D32_FLOAT;
+        case Format::D24_UNORM_S8_UINT: return DXGI_FORMAT_D24_UNORM_S8_UINT;
+        default:                        return DXGI_FORMAT_UNKNOWN;
+        }
+    }
+
+    [[nodiscard]] constexpr D3D12_SHADER_VISIBILITY ToVisibility(const ShaderStage s) noexcept {
+        switch (s) {
+        case ShaderStage::Vertex: return D3D12_SHADER_VISIBILITY_VERTEX;
+        case ShaderStage::Pixel:  return D3D12_SHADER_VISIBILITY_PIXEL;
+        default:                  return D3D12_SHADER_VISIBILITY_ALL;
+        }
+    }
+
+    [[nodiscard]] constexpr D3D12_PRIMITIVE_TOPOLOGY_TYPE ToTopology(const PrimitiveTopology t) noexcept {
+        switch (t) {
+        case PrimitiveTopology::TriangleList:
+        case PrimitiveTopology::TriangleStrip: return D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+        case PrimitiveTopology::LineList:      return D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE;
+        case PrimitiveTopology::PointList:     return D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+        default:                               return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
+        }
+    }
+
+    [[nodiscard]] constexpr D3D12_CULL_MODE ToCullMode(const CullMode m) noexcept {
+        switch (m) {
+        case CullMode::None:  return D3D12_CULL_MODE_NONE;
+        case CullMode::Front: return D3D12_CULL_MODE_FRONT;
+        case CullMode::Back:  return D3D12_CULL_MODE_BACK;
+        default:              return D3D12_CULL_MODE_BACK;
+        }
+    }
+
+    [[nodiscard]] constexpr DXGI_FORMAT ToVertexFormat(const Format f) noexcept {
+        return ToFormat(f); // reuse — same enum, different semantic use
+    }
+
+
+    [[nodiscard]] constexpr DXGI_FORMAT TranslateElementTypeToFormat(const ElementType type) noexcept
+    {
+        switch (type)
+        {
+        case ElementType::Float:  return DXGI_FORMAT_R32_FLOAT;
+        case ElementType::Float2: return DXGI_FORMAT_R32G32_FLOAT;
+        case ElementType::Float3: return DXGI_FORMAT_R32G32B32_FLOAT;
+        case ElementType::Float4: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+
+        case ElementType::Int:  return DXGI_FORMAT_R32_SINT;
+        case ElementType::Int2: return DXGI_FORMAT_R32G32_SINT;
+        case ElementType::Int3: return DXGI_FORMAT_R32G32B32_SINT;
+        case ElementType::Int4: return DXGI_FORMAT_R32G32B32A32_SINT;
+
+        case ElementType::Uint:  return DXGI_FORMAT_R32_UINT;
+        case ElementType::Uint2: return DXGI_FORMAT_R32G32_UINT;
+        case ElementType::Uint3: return DXGI_FORMAT_R32G32B32_UINT;
+        case ElementType::Uint4: return DXGI_FORMAT_R32G32B32A32_UINT;
+
+        case ElementType::Ushort:  return DXGI_FORMAT_R16_UINT;
+        case ElementType::Ushort2: return DXGI_FORMAT_R16G16_UINT;
+        case ElementType::Ushort4: return DXGI_FORMAT_R16G16B16A16_UINT;
+
+        case ElementType::Ubyte4:  return DXGI_FORMAT_R8G8B8A8_UINT;
+        case ElementType::Ubyte4N:  return DXGI_FORMAT_R8G8B8A8_UNORM;
+        case ElementType::Byte4:  return DXGI_FORMAT_R8G8B8A8_SINT;
+        case ElementType::Byte4N:  return DXGI_FORMAT_R8G8B8A8_SNORM;
+
+
+        default:
+            LM_CORE_ERROR("Unknown ElementType");
+            return DXGI_FORMAT_UNKNOWN;
+        }
+    }
+
+
+} // namespace RHI::DX::Convert

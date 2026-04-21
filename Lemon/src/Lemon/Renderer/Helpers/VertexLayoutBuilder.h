@@ -9,7 +9,7 @@ namespace Lemon::RHI
     {
     public:
         explicit VertexLayoutBuilder();
-        VertexLayoutBuilder& WithElement(const std::string& name, VertexElementType type, bool addToAccumulation = true);
+        VertexLayoutBuilder& WithElement(const std::string& name, ElementType type, bool addToAccumulation = true);
         VertexLayout Build(InputRate inputRate = InputRate::PerVertex);
 
     private:

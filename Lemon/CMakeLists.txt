@@ -29,7 +29,7 @@ add_library(Lemon SHARED
         src/Lemon/Renderer/TestDXLayer.h
         src/Lemon/Renderer/Backends/DX/DXDevice.cpp
         src/Lemon/Renderer/Backends/DX/DXDevice.h
-        src/Lemon/Renderer/Backends/DX/DXUtils.h
+        src/Lemon/Renderer/Backends/DX/API/DXUtils.h
         src/Lemon/Renderer/Backends/DX/DXBuffer.cpp
         src/Lemon/Renderer/Backends/DX/DXBuffer.h
         src/Lemon/Renderer/Buffers/Buffer.h
@@ -41,13 +41,24 @@ add_library(Lemon SHARED
         src/Lemon/Renderer/Buffers/IndexBuffer.h
         src/Lemon/Renderer/Backends/DX/DXIndexBuffer.cpp
         src/Lemon/Renderer/Backends/DX/DXIndexBuffer.h
-        src/Lemon/Renderer/Pipelines/ShaderPiece.h
-        src/Lemon/Renderer/Backends/DX/DXShaderPiece.cpp
-        src/Lemon/Renderer/Backends/DX/DXShaderPiece.h
-        src/Lemon/Renderer/Backends/DX/DXUtils.cpp)
+        src/Lemon/Renderer/Pipelines/IShader.h
+        src/Lemon/Renderer/Backends/DX/DXShader.cpp
+        src/Lemon/Renderer/Backends/DX/DXShader.h
+        src/Lemon/Renderer/Backends/DX/API/DXUtils.cpp
+        src/Lemon/Renderer/RHITypes.h
+        src/Lemon/Renderer/Pipelines/IShaderPipeline.h
+        src/Lemon/Renderer/Backends/DX/DXPipeline.h
+        src/Lemon/Renderer/Backends/DX/API/TranslationHelpers.h
+        src/Lemon/Renderer/Backends/DX/API/DXRootSignatureDesc.h
+        src/Lemon/Renderer/Backends/DX/API/DXRootSignatureDesc.cpp
+        src/Lemon/Renderer/Backends/DX/API/DXGraphicsPSODesc.cpp
+        src/Lemon/Renderer/Backends/DX/API/DXGraphicsPSODesc.h
+        src/Lemon/Renderer/Backends/DX/API/DXPSO.cpp
+        src/Lemon/Renderer/Backends/DX/API/DXPSO.h
+)
 
 target_include_directories(Lemon PUBLIC src/)
-target_include_directories(Lemon PRIVATE vendor/dx-headers)
+target_include_directories(Lemon PUBLIC vendor/dx-headers)
 
 target_precompile_headers(Lemon PRIVATE src/lmpch.h)
 
