@@ -1,10 +1,10 @@
 #pragma once
-#include "../../Buffers/Buffer.h"
+#include "Lemon/Renderer/RHI/Interfaces/IBuffer.h"
 #include "DXDevice.h"
 
 namespace Lemon::DX
 {
-    class DXBuffer : public RHI::Buffer
+    class DXBuffer : public RHI::IBuffer
     {
     public:
         DXBuffer(const DXDevice* device, const Desc& desc);

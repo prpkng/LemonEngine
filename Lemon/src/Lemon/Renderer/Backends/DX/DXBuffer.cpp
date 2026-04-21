@@ -8,7 +8,7 @@
 
 namespace Lemon::DX
 {
-    DXBuffer::DXBuffer(const DXDevice* device, const Desc& desc) : Buffer(desc)
+    DXBuffer::DXBuffer(const DXDevice* device, const Desc& desc) : IBuffer(desc)
     {
         D3D12_HEAP_PROPERTIES heapProps{};
         heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;

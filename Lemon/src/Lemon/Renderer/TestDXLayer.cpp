@@ -8,7 +8,7 @@
 #include "Backends/DX/DXBuffer.h"
 #include "Backends/DX/DXDevice.h"
 #include "Backends/DX/API/DXUtils.h"
-#include "Helpers/VertexLayoutBuilder.h"
+#include "RHI/Helpers/VertexLayoutBuilder.h"
 #include "Platform/WindowsWindow.h"
 #include "SDL3/SDL_properties.h"
 #include "SDL3/SDL_video.h"
@@ -158,7 +158,7 @@ void TestDXLayer::InitBuffers(const std::unique_ptr<DXDevice>& dxDevice) {
         indices.push_back(next+1);
     }
 
-    Buffer::Desc desc{};
+    IBuffer::Desc desc{};
     desc.memoryUsage = MemoryUsage::CPU_To_GPU;
     desc.initialData = vertices.data();
     desc.size = vertices.size() * sizeof(Vertex);

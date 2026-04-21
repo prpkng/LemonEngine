@@ -1,14 +1,14 @@
 #pragma once
 
 #include <lmpch.h>
-#include <Lemon/Renderer/RHITypes.h>
+#include <Lemon/Renderer/RHI/Types/RHITypes.h>
 
 namespace Lemon::RHI
 {
 
-class IShader
+
+struct IShader
 {
-public:
     virtual ~IShader() = default;
 
     virtual void Compile(const std::wstring& filePath, ShaderStage type) = 0;

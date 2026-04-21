@@ -32,21 +32,19 @@ add_library(Lemon SHARED
         src/Lemon/Renderer/Backends/DX/API/DXUtils.h
         src/Lemon/Renderer/Backends/DX/DXBuffer.cpp
         src/Lemon/Renderer/Backends/DX/DXBuffer.h
-        src/Lemon/Renderer/Buffers/Buffer.h
-        src/Lemon/Renderer/Buffers/VertexBuffer.h
+        src/Lemon/Renderer/RHI/Interfaces/IBuffer.h
         src/Lemon/Renderer/Backends/DX/DXVertexBuffer.cpp
         src/Lemon/Renderer/Backends/DX/DXVertexBuffer.h
-        src/Lemon/Renderer/Helpers/VertexLayoutBuilder.h
-        src/Lemon/Renderer/Helpers/VertexLayoutBuilder.cpp
-        src/Lemon/Renderer/Buffers/IndexBuffer.h
+        src/Lemon/Renderer/RHI/Helpers/VertexLayoutBuilder.h
+        src/Lemon/Renderer/RHI/Helpers/VertexLayoutBuilder.cpp
         src/Lemon/Renderer/Backends/DX/DXIndexBuffer.cpp
         src/Lemon/Renderer/Backends/DX/DXIndexBuffer.h
-        src/Lemon/Renderer/Pipelines/IShader.h
+        src/Lemon/Renderer/RHI/Interfaces/IShader.h
         src/Lemon/Renderer/Backends/DX/DXShader.cpp
         src/Lemon/Renderer/Backends/DX/DXShader.h
         src/Lemon/Renderer/Backends/DX/API/DXUtils.cpp
-        src/Lemon/Renderer/RHITypes.h
-        src/Lemon/Renderer/Pipelines/IShaderPipeline.h
+        src/Lemon/Renderer/RHI/Types/RHITypes.h
+        src/Lemon/Renderer/RHI/Interfaces/IPipeline.h
         src/Lemon/Renderer/Backends/DX/DXPipeline.h
         src/Lemon/Renderer/Backends/DX/API/TranslationHelpers.h
         src/Lemon/Renderer/Backends/DX/API/DXRootSignatureDesc.h

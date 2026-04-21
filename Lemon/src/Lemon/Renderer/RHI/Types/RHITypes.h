@@ -1,12 +1,11 @@
 #pragma once
 
-#include <lmpch.h>
 #include <Lemon/Core.h>
 
 namespace Lemon::RHI
 {
     // === FORMATS ===  (maps to DXGI_FORMAT / VkFormat)
-    enum class Format : uint32_t
+    enum class Format : u32
     {
         Unknown,
         RGBA8_UNORM,
@@ -29,7 +28,7 @@ namespace Lemon::RHI
     };
 
     // === Shader stages ===
-    enum class ShaderStage : uint32_t
+    enum class ShaderStage : u32
     {
         Vertex = BIT(0),
         Pixel = BIT(1),
@@ -40,11 +39,11 @@ namespace Lemon::RHI
     constexpr ShaderStage operator|(ShaderStage a, ShaderStage b)
     {
         return static_cast<ShaderStage>(
-            static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+            static_cast<u32>(a) | static_cast<u32>(b));
     }
 
     // --- Topology --- (maps to D3D12_PRIMITIVE_TOPOLOGY_TYPE / VkPrimitiveTopology)
-    enum class PrimitiveTopology : uint32_t
+    enum class PrimitiveTopology : u32
     {
         TriangleList,
         TriangleStrip,
@@ -53,13 +52,13 @@ namespace Lemon::RHI
     };
 
     // --- Cull mode --- (maps to D3D12_CULL_MODE / VkCullModeFlagBits)
-    enum class CullMode : uint32_t { None, Front, Back };
+    enum class CullMode : u32 { None, Front, Back };
 
     // --- Fill mode --- (maps to D3D12_FILL_MODE / VkPolygonMode)
-    enum class FillMode : uint32_t { Solid, Wireframe };
+    enum class FillMode : u32 { Solid, Wireframe };
 
     // --- Input rate --- (maps to D3D12_INPUT_CLASSIFICATION / VkVertexInputRate)
-    enum class InputRate : uint32_t { PerVertex, PerInstance };
+    enum class InputRate : u32 { PerVertex, PerInstance };
 
     // =================================================================================
     // Vertex input layout
@@ -69,12 +68,12 @@ namespace Lemon::RHI
     struct VertexAttribute
     {
         std::string semanticName; // DX12 uses this; Vulkan uses only location
-        uint32_t semanticIndex = 0;
+        u32 semanticIndex = 0;
         ElementType format = ElementType::Unknown;
-        uint32_t binding = 0;
-        uint32_t offset = 0;
+        u32 binding = 0;
+        u32 offset = 0;
         InputRate inputRate = InputRate::PerVertex;
-        uint32_t location = 0; // Vulkan: explicit; DX12: ignored (uses semantic)
+        u32 location = 0; // Vulkan: explicit; DX12: ignored (uses semantic)
     };
 
     // =================================================================================
@@ -83,7 +82,7 @@ namespace Lemon::RHI
     // DX12: CD3DX12_ROOT_PARAMETER (root constants, CBV, SRV, UAV, table)
     // Vulkan: VkPushConstantRange + VkDescriptorSetLayoutBinding
     // =================================================================================
-    enum class RootParamType : uint32_t
+    enum class RootParamType : u32
     {
         Constants, // DX12: root constants  | Vulkan: push constants
         ConstantBufferView, // DX12: root CBV        | Vulkan: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
@@ -94,9 +93,9 @@ namespace Lemon::RHI
     struct RootParameter
     {
         RootParamType type = RootParamType::Constants;
-        uint32_t count = 1; // num 32-bit values (Constants) or descriptors
-        uint32_t shaderReg = 0; // DX12: register(bN) | Vulkan: binding point
-        uint32_t space = 0; // DX12: space N       | Vulkan: set N
+        u32 count = 1; // num 32-bit values (Constants) or descriptors
+        u32 shaderReg = 0; // DX12: register(bN) | Vulkan: binding point
+        u32 space = 0; // DX12: space N       | Vulkan: set N
         ShaderStage visibility = ShaderStage::All;
     };
 
@@ -140,8 +139,8 @@ namespace Lemon::RHI
     // DX12: SampleDesc | Vulkan: VkPipelineMultisampleStateCreateInfo
     // =================================================================================
     struct SampleState {
-        uint32_t count   = 1;
-        uint32_t quality = 0;
+        u32 count   = 1;
+        u32 quality = 0;
     };
 
 

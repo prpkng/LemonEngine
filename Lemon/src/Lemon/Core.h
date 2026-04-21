@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #ifdef LM_PLATFORM_WINDOWS
 	#ifdef LM_BUILD_DLL
 		#define LEMON_API __declspec(dllexport)

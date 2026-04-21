@@ -2,7 +2,7 @@
 #include <lmpch.h>
 
 #include "DXDevice.h"
-#include "Lemon/Renderer/Buffers/IndexBuffer.h"
+#include "Lemon/Renderer/RHI/Interfaces/IBuffer.h"
 
 namespace Lemon::DX
 {
@@ -10,10 +10,10 @@ namespace Lemon::DX
     public:
         DXIndexBuffer(DXDevice* device, const Desc& desc);
 
-        const std::shared_ptr<RHI::Buffer> GetBuffer() const override { return m_Buffer; }
+        const std::shared_ptr<RHI::IBuffer> GetBuffer() const override { return m_Buffer; }
         const D3D12_INDEX_BUFFER_VIEW* GetBufferView() const { return &m_IndexBufferView; }
     private:
-        std::shared_ptr<RHI::Buffer> m_Buffer;
+        std::shared_ptr<RHI::IBuffer> m_Buffer;
         D3D12_INDEX_BUFFER_VIEW m_IndexBufferView;
     };
 }

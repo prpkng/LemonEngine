@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <algorithm>
-#include <Lemon/Renderer/Pipelines/IShader.h>
+#include <Lemon/Renderer/RHI/Interfaces/IShader.h>
 #include "TranslationHelpers.h"
 
 namespace Lemon::DX

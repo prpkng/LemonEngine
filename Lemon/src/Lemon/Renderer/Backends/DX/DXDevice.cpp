@@ -14,7 +14,7 @@
 
 namespace Lemon::DX
 {
-    std::shared_ptr<RHI::Buffer> DXDevice::CreateBuffer(const RHI::Buffer::Desc& desc)
+    std::shared_ptr<RHI::IBuffer> DXDevice::CreateBuffer(const RHI::IBuffer::Desc& desc)
     {
         return std::make_shared<DXBuffer>(this, desc);
     }

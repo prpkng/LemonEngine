@@ -1,7 +1,7 @@
 #pragma once
 
 #include <dxgi.h>
-#include <Lemon/Renderer/RHITypes.h>
+#include <Lemon/Renderer/RHI/Types/RHITypes.h>
 #include <Lemon/Core.h>
 
 // ===============================================

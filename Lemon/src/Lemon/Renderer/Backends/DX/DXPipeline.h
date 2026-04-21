@@ -1,6 +1,6 @@
 #pragma once
 #include "API/DXPSO.h"
-#include "Lemon/Renderer/Pipelines/IShaderPipeline.h"
+#include "Lemon/Renderer/RHI/Interfaces/IPipeline.h"
 #include "API/DXUtils.h"
 
 namespace Lemon::DX

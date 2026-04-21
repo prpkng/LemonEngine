@@ -1,5 +1,5 @@
 #pragma once
-#include <Lemon/Renderer/Pipelines/IShader.h>
+#include <Lemon/Renderer/RHI/Interfaces/IShader.h>
 
 #include "API/DXUtils.h"
 #include "d3dcommon.h"

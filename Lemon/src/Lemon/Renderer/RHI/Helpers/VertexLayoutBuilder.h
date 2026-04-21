@@ -1,6 +1,6 @@
 #pragma once
 #include <lmpch.h>
-#include <Lemon/Renderer/Buffers/VertexBuffer.h>
+#include <Lemon/Renderer/RHI/Interfaces/IBuffer.h>
 
 
 namespace Lemon::RHI

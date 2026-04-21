@@ -1,6 +1,5 @@
 #include "VertexLayoutBuilder.h"
 
-
 namespace Lemon::RHI
 {
     VertexLayoutBuilder::VertexLayoutBuilder() : m_AccumulatedOffset(0), m_TotalStride(0)
