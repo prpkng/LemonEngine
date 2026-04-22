@@ -67,7 +67,7 @@ namespace Lemon::DX
                                        firstIndex, vertexOffset, firstInstance);
     }
 
-    void DXCommandList::PushConstants(RHI::ShaderStage stage, const void* data, size_t dataSize,
+    void DXCommandList::PushConstants(RHI::ShaderStage stage, const u32 slot, const void* data, size_t dataSize,
         u32 offsetIn32BitWords)
     {
         AssertRecording();
@@ -77,7 +77,7 @@ namespace Lemon::DX
         const u32 num32BitValues = static_cast<u32>(dataSize / 4);
 
         m_CmdList->SetGraphicsRoot32BitConstants(
-            0,
+            slot,
             num32BitValues,
             data,
             offsetIn32BitWords);

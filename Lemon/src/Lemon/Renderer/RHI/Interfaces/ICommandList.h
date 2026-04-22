@@ -68,6 +68,7 @@ namespace Lemon::RHI
         /// \code maps to SetGraphicsRoot32BitConstants | vkCmdPushConstants \endcode
         virtual void PushConstants(
             ShaderStage stage,
+            u32 slot,
             const void* data,
             size_t dataSize,
             u32 offsetIn32BitWords

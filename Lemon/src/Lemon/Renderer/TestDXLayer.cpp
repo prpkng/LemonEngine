@@ -19,6 +19,7 @@
 #include "Backends/DX/API/DXPSO.h"
 #include "Backends/DX/API/Helpers.h"
 #include "Backends/DX/Commands/DXCommandList.h"
+#include "SDL3/SDL_timer.h"
 
 
 using namespace Lemon::RHI;
@@ -130,7 +131,8 @@ void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device) {
         VertexAttribute { "COLOR",    0, ElementType::Float3, 0, 8, InputRate::PerVertex, 0 }
     };
     desc.rootParameters = {
-        RootParameter { RootParamType::Constants, 1, 0, 0, ShaderStage::Vertex }
+        RootParameter { RootParamType::Constants, 1, 0, 0, ShaderStage::Vertex | ShaderStage::Pixel },
+        RootParameter { RootParamType::Constants, 1, 1, 0, ShaderStage::Vertex },
     };
 
     pipeline = std::dynamic_pointer_cast<DXPipeline>(device->CreatePipeline(desc));
@@ -223,6 +225,7 @@ TestDXLayer::~TestDXLayer() {
 void TestDXLayer::OnUpdate() {
     static UINT triangleAngle = 0;
     static UINT triangleColor = 0;
+    float time = SDL_GetTicks() / 1000.0f;
 
     // --- Throttle: wait on the OLDEST frame slot before reusing it ---
     // On frames 0 and 1 this value is 0, so CpuWaitForValue returns immediately.
@@ -254,7 +257,8 @@ void TestDXLayer::OnUpdate() {
 
     cmdList->SetPrimitiveTopology(PrimitiveTopology::TriangleList);
     cmdList->BindPipeline(pipeline);
-    cmdList->PushConstants(ShaderStage::Vertex, &triangleAngle, 4, 0);
+    cmdList->PushConstants(ShaderStage::Vertex, 0, &time, 4, 0);
+    cmdList->PushConstants(ShaderStage::Vertex, 1, &triangleAngle, 4, 0);
     cmdList->BindVertexBuffer(vertexBuffer);
     cmdList->BindIndexBuffer(indexBuffer);
     cmdList->DrawIndexed(SIDE_COUNT*3, 1, 0, 0, 0);

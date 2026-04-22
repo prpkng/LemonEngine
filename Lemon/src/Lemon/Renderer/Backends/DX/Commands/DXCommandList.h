@@ -20,7 +20,7 @@ namespace Lemon::DX
         void DrawIndexed(u32 indexCount, u32 instanceCount, u32 firstIndex, i32 vertexOffset,
                          u32 firstInstance) override;
 
-        void PushConstants(RHI::ShaderStage stage, const void* data, size_t dataSize, u32 offsetIn32BitWords) override;
+        void PushConstants(RHI::ShaderStage stage, u32 slot, const void* data, size_t dataSize, u32 offsetIn32BitWords) override;
 
         void SetPrimitiveTopology(RHI::PrimitiveTopology topology) override;
 
