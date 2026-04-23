@@ -1,6 +1,8 @@
 ﻿/.vs
 /bin
 /bin-int
+/.cache
+
 **/*.sln
 **/*.slnx
 **/*.vcxproj*

@@ -1,7 +1,3 @@
-//
-// Created by guiej on 21/04/2026.
-//
-
 #include "DXCommandList.h"
 
 #include "Lemon/Renderer/Backends/DX/Pipelines/DXPipeline.h"

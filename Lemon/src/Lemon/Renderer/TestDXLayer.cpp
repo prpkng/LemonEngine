@@ -30,7 +30,7 @@ struct Vertex {
     float color[3];
 
 
-     std::string ToString() const {
+     [[nodiscard]] std::string ToString() const {
         return fmt::format("pos: {0:.2f}x{1:.2f} color: R:{2} G:{3} B:{4}", position[0], position[1],
             color[0], color[1], color[2]);
     }
@@ -219,13 +219,12 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
     InitBuffers(device);
 }
 
-TestDXLayer::~TestDXLayer() {
-}
+TestDXLayer::~TestDXLayer() = default;
 
 void TestDXLayer::OnUpdate() {
     static UINT triangleAngle = 0;
     static UINT triangleColor = 0;
-    float time = SDL_GetTicks() / 1000.0f;
+    const float time = static_cast<float>(SDL_GetTicks()) / 1000.0f;
 
     // --- Throttle: wait on the OLDEST frame slot before reusing it ---
     // On frames 0 and 1 this value is 0, so CpuWaitForValue returns immediately.
@@ -235,7 +234,8 @@ void TestDXLayer::OnUpdate() {
         graphicsQueue->CpuWaitForValue(waitValue);
 
 
-    const std::unique_ptr<DXCommandList> cmdList(static_cast<DXCommandList*>(graphicsQueue->GetCommandList().release()));
+    auto cmdList = graphicsQueue->GetCommandList().release();
+    const DXCommandList* dxCmdList = dynamic_cast<DXCommandList*>(cmdList);
     cmdList->Begin();
 
     const UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
@@ -253,7 +253,7 @@ void TestDXLayer::OnUpdate() {
     cmdList->SetViewport({ 0.0f, 0.0f, static_cast<float>(window->GetWidth()), static_cast<float>(window->GetHeight()), 0.0f, 0.0f});
     cmdList->SetScissor({0, 0, LONG_MAX, LONG_MAX });
 
-    cmdList->GetHandle()->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    dxCmdList->GetHandle()->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
     cmdList->SetPrimitiveTopology(PrimitiveTopology::TriangleList);
     cmdList->BindPipeline(pipeline);
@@ -278,4 +278,6 @@ void TestDXLayer::OnUpdate() {
     frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
     triangleAngle+=2;
     triangleColor = (triangleColor + 1) % 255;
+
+    delete cmdList;
 }
