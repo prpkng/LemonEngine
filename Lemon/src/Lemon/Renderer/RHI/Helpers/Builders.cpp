@@ -1,4 +1,6 @@
-#include "VertexLayoutBuilder.h"
+#include "Builders.h"
+#include "Lemon/Renderer/RHI/Types/RHITypes.h"
+#include <vector>
 
 namespace Lemon::RHI
 {
@@ -23,6 +25,33 @@ namespace Lemon::RHI
             m_TotalStride,
             inputRate
         };
+    }
+
+    InputLayoutBuilder::InputLayoutBuilder() : m_ElementCount(0), m_AccumulatedOffset(0)
+    {
+    }
+
+    InputLayoutBuilder& InputLayoutBuilder::WithElement(const std::string& semanticName, ElementType type, const InputRate inputRate, const u32 semanticIndex)
+    {
+        auto attribute = VertexAttribute {
+            .semanticName = semanticName, 
+            .semanticIndex = semanticIndex, 
+            .format = type,
+            .binding = 0,
+            .offset = m_AccumulatedOffset,
+            .inputRate = inputRate,
+            .location = m_ElementCount,
+        };
+        m_Attributes.emplace_back(attribute);
+        const size_t size = GetVertexElementSize(type);
+        m_AccumulatedOffset += size;
+        m_ElementCount++;
+        return *this;
+    }
+
+    std::vector<VertexAttribute> InputLayoutBuilder::Build()
+    {
+        return std::move(m_Attributes);
     }
 
     u32 GetVertexElementSize(const ElementType type)

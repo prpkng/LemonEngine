@@ -13,6 +13,15 @@ namespace Lemon::RHI
             size_t size{};
             const void* initialData = nullptr;
             bool allowResize = false;
+            
+            Desc() {}
+
+            template <typename T>
+            Desc(BufferUsage usage, MemoryUsage memoryUsage, const std::vector<T>& initialData, bool allowResize = false) :
+                usage(usage), memoryUsage(memoryUsage), size(initialData.size() * sizeof(T)), initialData(initialData.data()), allowResize(allowResize) {}
+
+            Desc(BufferUsage usage, MemoryUsage memoryUsage, size_t size, const void* initialData = nullptr, bool allowResize = false) :
+                usage(usage), memoryUsage(memoryUsage), size(size), initialData(initialData), allowResize(allowResize) {}
         };
         explicit IBuffer(const Desc& desc) : m_Size(desc.size), m_MemoryUsage(desc.memoryUsage) {}
         virtual ~IBuffer() = default;

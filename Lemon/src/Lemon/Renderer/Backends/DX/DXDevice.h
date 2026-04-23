@@ -34,6 +34,9 @@ namespace Lemon::DX
         ComPtr<ID3D12Device> GetHandle() const { return m_Handle; }
 
         ComPtr<ID3D12Device> m_Handle;
+
+        using RHI::IDevice::CreateIndexBuffer;
+        using RHI::IDevice::CreateVertexBuffer;
     private:
     };
 } // Lemon::DX
