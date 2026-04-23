@@ -7,9 +7,9 @@ namespace Lemon::RHI
     // === FORMATS ===  (maps to DXGI_FORMAT / VkFormat)
 
 
-    /// \brief Surface type Formats, used for textures, surfaces, etc.
+    /// @brief Surface type Formats, used for textures, surfaces, etc.
     ///
-    /// \code maps to DXGI_FORMAT / VkFormat \endcode
+    /// @code maps to DXGI_FORMAT / VkFormat @endcode
     enum class Format : u32
     {
         Unknown,
@@ -20,9 +20,9 @@ namespace Lemon::RHI
         D24_UNORM_S8_UINT,
     };
 
-    /// \brief Input element types. Represents the layout type that can be passed to a vertex layout
+    /// @brief Input element types. Represents the layout type that can be passed to a vertex layout
     ///
-    /// \code also maps to DXGI_FORMAT / VkFormat \endcode
+    /// @code also maps to DXGI_FORMAT / VkFormat @endcode
     enum class ElementType
     {
         Float, Float2, Float3, Float4,
@@ -35,14 +35,14 @@ namespace Lemon::RHI
         Unknown
     };
 
-    /// \brief Vertex Input rate
+    /// @brief Vertex Input rate
     ///
-    /// \code maps to D3D12_INPUT_CLASSIFICATION / VkVertexInputRate \endcode
+    /// @code maps to D3D12_INPUT_CLASSIFICATION / VkVertexInputRate @endcode
     enum class InputRate : u32 { PerVertex, PerInstance };
 
 #pragma region === SHADER PIPELINE RELATED ===
 
-    /// \brief Shader file stages
+    /// @brief Shader file stages
     enum class ShaderStage : u32
     {
         Vertex = BIT(0),
@@ -59,43 +59,43 @@ namespace Lemon::RHI
 
     /// Geometry topology type
     ///
-    /// \code maps to D3D12_PRIMITIVE_TOPOLOGY_TYPE / VkPrimitiveTopology \endcode
+    /// @code maps to D3D12_PRIMITIVE_TOPOLOGY_TYPE / VkPrimitiveTopology @endcode
     enum class PrimitiveTopology : u32
     {
-        /// \brief Specifies a list of triangles with defined vertices, each 3 vertices form a single triangle
+        /// @brief Specifies a list of triangles with defined vertices, each 3 vertices form a single triangle
         TriangleList,
-        /// \brief Specifies a <a href="https://docs.safe.com/fme/html/FME-Form-Documentation/FME-Form/!FME_Geometry/IFMETriangleStrip.htm">
+        /// @brief Specifies a <a href="https://docs.safe.com/fme/html/FME-Form-Documentation/FME-Form/!FME_Geometry/IFMETriangleStrip.htm">
         /// Triangle Strip</a>. The first 3 vertices define the first triangle.
         /// Subsequent vertices form new triangles with the last 2 defined vertices
         ///
         TriangleStrip,
-        /// \brief Specifies a <a href="https://docs.safe.com/fme/html/FME-Form-Documentation/FME-Form/!FME_Geometry/IFMETriangleFan.htm">
+        /// @brief Specifies a <a href="https://docs.safe.com/fme/html/FME-Form-Documentation/FME-Form/!FME_Geometry/IFMETriangleFan.htm">
         /// Triangle Fan</a> sharing a center vertex. The first 3 vertices define the first triangle.
         /// Subsequent vertices form new triangles sharing the center and the last triangle.
         /// This replaces loop-generated polygon indices (although not frequently used)
         TriangleFan,
 
-        /// \brief Specifies a list of lines. Lines do not share vertices, each 2 new vertices form a new line
+        /// @brief Specifies a list of lines. Lines do not share vertices, each 2 new vertices form a new line
         LineList,
-        /// \brief Specifies a set of lines. Each new vertex connects with the last one
+        /// @brief Specifies a set of lines. Each new vertex connects with the last one
         LineStrip,
-        /// \brief Specifies a set of points
+        /// @brief Specifies a set of points
         PointList,
     };
 
-    /// \brief Face culling mode
+    /// @brief Face culling mode
     ///
-    /// \code maps to D3D12_CULL_MODE / VkCullModeFlagBits \endcode
+    /// @code maps to D3D12_CULL_MODE / VkCullModeFlagBits @endcode
     enum class CullMode : u32 { None, Front, Back };
 
-    /// \brief Geometry filling mode (solid / wireframe)
+    /// @brief Geometry filling mode (solid / wireframe)
     ///
-    /// \code maps to D3D12_FILL_MODE / VkPolygonMode \endcode
+    /// @code maps to D3D12_FILL_MODE / VkPolygonMode @endcode
     enum class FillMode : u32 { Solid, Wireframe };
 
-    /// \brief Vertex attribute description
+    /// @brief Vertex attribute description
     ///
-    /// \code maps to D3D12_INPUT_ELEMENT_DESC / VkVertexInputAttributeDescription + VkVertexInputBindingDescription \endcode
+    /// @code maps to D3D12_INPUT_ELEMENT_DESC / VkVertexInputAttributeDescription + VkVertexInputBindingDescription @endcode
     struct VertexAttribute
     {
         std::string semanticName; /// DX12 uses this; Vulkan uses only location
@@ -107,9 +107,9 @@ namespace Lemon::RHI
         u32 location = 0; /// Vulkan: explicit; DX12: ignored (uses semantic)
     };
 
-    /// \brief Root parameter type
+    /// @brief Root parameter type
     ///
-    /// \sa RootParameter
+    /// @sa RootParameter
     enum class RootParamType : u32
     {
         Constants, /// DX12: root constants  | Vulkan: push constants
@@ -119,9 +119,9 @@ namespace Lemon::RHI
     };
 
 
-    /// \brief Root parameters / Uniform / Push constants / Descriptor bindings
+    /// @brief Root parameters / Uniform / Push constants / Descriptor bindings
     ///
-    /// \code maps to CD3DX12_ROOT_PARAMETER / VkPushConstantRange + VkDescriptorSetLayoutBinding \endcode
+    /// @code maps to CD3DX12_ROOT_PARAMETER / VkPushConstantRange + VkDescriptorSetLayoutBinding @endcode
     struct RootParameter
     {
         RootParamType type = RootParamType::Constants;
@@ -131,9 +131,9 @@ namespace Lemon::RHI
         ShaderStage visibility = ShaderStage::All;
     };
 
-    /// \brief Rasterizer state
+    /// @brief Rasterizer state
     ///
-    /// \code maps to D3D12_RASTERIZER_DESC / VkPipelineRasterizationStateCreateInfo \endcode
+    /// @code maps to D3D12_RASTERIZER_DESC / VkPipelineRasterizationStateCreateInfo @endcode
     struct RasterizerState
     {
         CullMode cullMode = CullMode::Back;
@@ -143,9 +143,9 @@ namespace Lemon::RHI
         float depthBias = 0.0f;
     };
 
-    /// \brief Depth/stencil state
+    /// @brief Depth/stencil state
     ///
-    /// \code maps to D3D12_DEPTH_STENCIL_DESC / VkPipelineDepthStencilStateCreateInfo \endcode
+    /// @code maps to D3D12_DEPTH_STENCIL_DESC / VkPipelineDepthStencilStateCreateInfo @endcode
     struct DepthStencilState
     {
         bool depthEnable = true;
@@ -154,18 +154,18 @@ namespace Lemon::RHI
         //Extend with compare op, stencil ops, etc. as needed
     };
 
-    /// \brief Blend state
+    /// @brief Blend state
     ///
-    /// \code maps to D3D12_BLEND_DESC / VkPipelineColorBlendStateCreateInfo \endcode
+    /// @code maps to D3D12_BLEND_DESC / VkPipelineColorBlendStateCreateInfo @endcode
     struct BlendState
     {
         bool blendEnable = false;
         // Extend with src/dst blend factors, blend op, etc.
     };
 
-    /// \brief MSAA
+    /// @brief MSAA
     ///
-    /// \code maps to SampleDesc / VkPipelineMultisampleStateCreateInfo \endcode
+    /// @code maps to SampleDesc / VkPipelineMultisampleStateCreateInfo @endcode
     struct SampleState {
         u32 count   = 1;
         u32 quality = 0;
