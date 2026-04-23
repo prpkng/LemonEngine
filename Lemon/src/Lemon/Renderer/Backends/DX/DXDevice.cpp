@@ -10,6 +10,7 @@
 #include "API/DXRootSignatureDesc.h"
 #include "API/Helpers.h"
 #include "Commands/DXCommandQueue.h"
+#include "Resources/DXSwapchain.h"
 
 namespace Lemon::DX
 {
@@ -97,6 +98,11 @@ namespace Lemon::DX
     std::shared_ptr<RHI::ICommandQueue> DXDevice::CreateCommandQueue(RHI::QueueType type)
     {
         return std::make_shared<DXCommandQueue>(shared_from_this(), type);
+    }
+
+    std::shared_ptr<RHI::ISwapchain> DXDevice::CreateSwapchain(const std::shared_ptr<RHI::ICommandQueue>& cmdQueue, const RHI::ISwapchain::Desc& desc)
+    {
+        return std::make_shared<DXSwapchain>(shared_from_this(), std::dynamic_pointer_cast<DXCommandQueue>(cmdQueue), desc);
     }
 
     DXDevice::DXDevice(const Desc& desc) : IDevice()

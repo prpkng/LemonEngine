@@ -18,7 +18,6 @@
 #include <numbers>
 
 #include "Backends/DX/Pipelines/DXPipeline.h"
-#include "Backends/DX/API/DXPSO.h"
 #include "Backends/DX/API/Helpers.h"
 #include "Backends/DX/Commands/DXCommandList.h"
 #include "SDL3/SDL_timer.h"
@@ -41,84 +40,6 @@ struct Vertex {
 void logHRError(HRESULT hr, std::string_view msg) {
     auto errorMsg = HrToString(hr);
     LM_CORE_FATAL("{0}: ERROR {1}", msg, errorMsg);
-}
-
-void TestDXLayer::InitCommandQueue(ComPtr<ID3D12Device> device) {
-    // The command queue decides which order the command lists should execute. In our case, only one command list exists.
-    // commandQueue = nullptr;
-    // D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-    // queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-    // queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    // CHECK(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue)), "Failed to create command queue");
-    //
-    // // The command allocator is used to allocate memory on the GPU for commands
-    // commandAllocator = nullptr;
-    // CHECK(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)), "Failed to create command allocator");
-    // CHECK(commandAllocator->Reset(), "Failed to reset command allocator");
-    //
-    // // The command list is used to store a list of commands we wish to execute on the GPU
-    // commandList = nullptr;
-    // CHECK(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator, nullptr, IID_PPV_ARGS(&commandList)), "Failed to create command list");
-    // CHECK(commandList->Close(), "Failed to close command list");
-}
-
-void TestDXLayer::InitSwapchain(HWND hwnd) {
-    // Helper factory to create the swap chain
-    IDXGIFactory4* factory = nullptr;
-    CHECK(CreateDXGIFactory1(IID_PPV_ARGS(&factory)), "Failed to create DXGI factory");
-
-    // Create the swap chain
-    DXGI_SWAP_CHAIN_DESC swapChainDesc = {
-        .BufferDesc = DXGI_MODE_DESC {
-            .Width = window->GetWidth(),
-            .Height = window->GetHeight(),
-            .Format = DXGI_FORMAT_R8G8B8A8_UNORM
-        },
-        .SampleDesc = DXGI_SAMPLE_DESC { .Count = 1},
-        .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
-        .BufferCount = 2,
-        .OutputWindow = hwnd,
-        .Windowed = TRUE,
-        .SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD,
-    };
-
-    IDXGISwapChain* tempSwapChain = nullptr;
-    CHECK(factory->CreateSwapChain(graphicsQueue->GetHandle().Get(), &swapChainDesc, &tempSwapChain), "Failed to create swap chain");
-
-    // Cast swap chain to IDXGISwapChain3 to leverage the lastest features
-    swapChain = {};
-    CHECK(tempSwapChain->QueryInterface(IID_PPV_ARGS(&swapChain)), "Failed to cast swap chain");
-    tempSwapChain->Release();
-    tempSwapChain = nullptr;
-}
-
-void TestDXLayer::InitRenderTargets(ComPtr<ID3D12Device> device) {
-    // Memory descriptor heap to store render target views (RTV). Descriptor describes how to interperate resource memory
-    rtvHeap = nullptr;
-    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-    rtvHeapDesc.NumDescriptors = 2;
-    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    CHECK(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)), "Failed to create descriptor heap");
-
-    rtvIncrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    {
-        D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
-        for (UINT i = 0; i < 2; i++) {
-            CHECK(swapChain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i])), "Failed to get swapchain buffer");
-
-            device->CreateRenderTargetView(renderTargets[i], nullptr, rtvHandle);
-            rtvHandle.ptr += rtvIncrementSize;
-        }
-    }
-}
-
-void TestDXLayer::InitSync(ComPtr<ID3D12Device> device) {
-    // Fence is used to synchronize the CPU with the GPU, so they don't touch the same memory at the same time
-    fence = nullptr;
-    fenceValue = 0;
-    CHECK(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)), "Failed to create fence");
-
-    fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }
 
 void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device) {
@@ -152,7 +73,7 @@ void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice) {
     for (int i = 0; i < SIDE_COUNT; i++)
     {
         Vertex vertex = {
-            { cosf(incr * i)/1.5f, sinf(incr * i)/1.5f },
+            { cosf(incr * (float)i)/1.5f, sinf(incr * (float)i)/1.5f },
             {1.0f, 1.0f, 1.0f}
         };
         vertices.push_back(vertex);
@@ -193,7 +114,7 @@ void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice) {
 
 TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX Layer") {
 
-    window = static_cast<Lemon::WindowsWindow*>(wnd.get());
+    window = dynamic_cast<Lemon::WindowsWindow*>(wnd.get());
 
     const SDL_PropertiesID props = SDL_GetWindowProperties(window->m_Handle);
     const auto hwnd = static_cast<HWND>(SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr));
@@ -208,13 +129,14 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
 
     graphicsQueue = std::dynamic_pointer_cast<DXCommandQueue>(device->CreateCommandQueue(QueueType::Graphics));
 
-    // InitCommandQueue(device->m_Handle);
-
-    InitSwapchain(hwnd);
-
-    InitRenderTargets(device->m_Handle);
-
-    // InitSync(device->m_Handle);
+    auto swapChainDesc = ISwapchain::Desc{
+        .windowHandle = hwnd,
+        .width = window->GetWidth(),
+        .height = window->GetHeight(),
+        .bufferCount = 2,
+        .format = Format::RGBA8_UNORM
+    };
+    swapchain = std::dynamic_pointer_cast<DXSwapchain>(device->CreateSwapchain(graphicsQueue, swapChainDesc));
 
     InitShaderPipeline(device);
 
@@ -240,13 +162,12 @@ void TestDXLayer::OnUpdate() {
     const DXCommandList* dxCmdList = dynamic_cast<DXCommandList*>(cmdList);
     cmdList->Begin();
 
-    const UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+    const UINT backBufferIndex = swapchain->AcquireNextBackbuffer();
 
     // Transition the backBuffer to the render target state
-    cmdList->TransitionResource(renderTargets[backBufferIndex], ResourceState::Present, ResourceState::RenderTarget);
+    cmdList->TransitionResource(swapchain->GetBackbuffer(backBufferIndex), ResourceState::Present, ResourceState::RenderTarget);
 
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
-    rtvHandle.ptr += backBufferIndex * rtvIncrementSize;
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = swapchain->GetBackbufferView(backBufferIndex);
 
     // Clear the render target
     cmdList->ClearRenderTarget(&rtvHandle, { 0.0f, 0.2f, 0.4f, 1.0f });
@@ -266,13 +187,13 @@ void TestDXLayer::OnUpdate() {
     cmdList->DrawIndexed(SIDE_COUNT*3, 1, 0, 0, 0);
 
     // Transition the backBuffer to the present state
-    cmdList->TransitionResource(renderTargets[backBufferIndex], ResourceState::RenderTarget, ResourceState::Present);
+    cmdList->TransitionResource(swapchain->GetBackbuffer(backBufferIndex), ResourceState::RenderTarget, ResourceState::Present);
 
     cmdList->End();
 
     const u64 frameDone = graphicsQueue->SubmitSingle(*cmdList);
 
-    CHECK(swapChain->Present(1, 0), "Failed to present swap chain");
+    swapchain->Present(1);
 
     //Wait on the CPU for the GPU frame to finish
     graphicsQueue->CpuWaitForValue(frameDone - 1);

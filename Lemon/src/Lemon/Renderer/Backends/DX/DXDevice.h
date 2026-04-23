@@ -26,7 +26,7 @@ namespace Lemon::DX
         [[nodiscard]] std::shared_ptr<RHI::IIndexBuffer> CreateIndexBuffer(const RHI::IIndexBuffer::Desc& desc) override;
         [[nodiscard]] std::shared_ptr<RHI::IPipeline> CreatePipeline(const RHI::IPipeline::Desc& desc) override;
         [[nodiscard]] std::shared_ptr<RHI::ICommandQueue> CreateCommandQueue(RHI::QueueType type) override;
-
+        [[nodiscard]] std::shared_ptr<RHI::ISwapchain> CreateSwapchain(const std::shared_ptr<RHI::ICommandQueue>& cmdQueue, const RHI::ISwapchain::Desc& desc) override;
 
         explicit DXDevice(const Desc& desc);
         ~DXDevice() override;

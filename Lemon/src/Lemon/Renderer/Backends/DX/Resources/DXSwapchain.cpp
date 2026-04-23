@@ -43,19 +43,19 @@ DXSwapchain::DXSwapchain(const std::shared_ptr<DXDevice>& device,
 void DXSwapchain::InitRenderTargets(const ComPtr<ID3D12Device>& device, const u32 bufferCount) {
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {
         .Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
-        .NumDescriptors = static_cast<UINT>(GetBackbufferCount()),
+        .NumDescriptors = static_cast<UINT>(bufferCount),
     };
     CHECK(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)),
           "Failed to create RTV descriptor heap");
     rtvIncrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-    m_RenderTargets.resize(GetBackbufferCount());
+    m_RenderTargets.resize(bufferCount);
 
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart());
-    for (u32 i = 0; i < GetBackbufferCount(); i++) {
+    for (u32 i = 0; i < bufferCount; i++) {
         CHECK(m_Swapchain->GetBuffer(i, IID_PPV_ARGS(&m_RenderTargets[i])), "Failed to get swapchain buffer");
 
-        device->CreateRenderTargetView(m_RenderTargets[i].Get(), nullptr, rtvHandle);
+        device->CreateRenderTargetView(m_RenderTargets[i], nullptr, rtvHandle);
         rtvHandle.ptr += rtvIncrementSize;
     }
 }

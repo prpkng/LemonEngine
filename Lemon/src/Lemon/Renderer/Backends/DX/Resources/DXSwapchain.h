@@ -23,12 +23,17 @@ class DXSwapchain : public RHI::ISwapchain {
     void Present(u32 swapInterval) override;
     void Resize(u32 width, u32 height) override;
 
-    [[nodiscard]] const void* GetBackbuffer(u32 index) const override {
+    //TODO a bit hacky in atp, move this to ISwapchain as soon as we have a proper ITexture and ITexture view interface
+    [[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE GetBackbufferView(u32 index) const {
         D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
-        // Ugh this is ugly
-        return (const void*)(rtvHandle.ptr + index * rtvIncrementSize);
+        rtvHandle.ptr += index * rtvIncrementSize;
+
+        return rtvHandle;
     }
-    [[nodiscard]] u32 GetBackbufferCount() const override { return m_RenderTargets.size(); }
+    [[nodiscard]] void* GetBackbuffer(u32 index) const override {
+        return m_RenderTargets[index];
+    }
+    [[nodiscard]] u32 GetBackbufferCount() const override { return static_cast<u32>(m_RenderTargets.size()); }
     [[nodiscard]] RHI::Format GetBackbufferFormat() const override { return m_Format; }
 
 
@@ -36,7 +41,7 @@ class DXSwapchain : public RHI::ISwapchain {
     void InitRenderTargets(const ComPtr<ID3D12Device>& device, u32 bufferCount);
     RHI::Format m_Format;
     ComPtr<IDXGISwapChain3> m_Swapchain = nullptr;
-    std::vector<ComPtr<ID3D12Resource>> m_RenderTargets{};
+    std::vector<ID3D12Resource*> m_RenderTargets{};
     ComPtr<ID3D12DescriptorHeap> rtvHeap = nullptr;
     UINT rtvIncrementSize{};
 };
