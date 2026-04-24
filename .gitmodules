@@ -7,3 +7,6 @@
 [submodule "Lemon/vendor/magic_enum"]
 	path = Lemon/vendor/magic_enum
 	url = https://github.com/Neargye/magic_enum.git
+[submodule "Lemon/vendor/DirectXTK12"]
+	path = Lemon/vendor/DirectXTK12
+	url = https://github.com/microsoft/DirectXTK12.git
