@@ -1,9 +1,23 @@
 ---
 # We'll use defaults from the LLVM style, but with 4 columns indentation.
-BasedOnStyle: LLVM
+# BasedOnStyle: LLVM
 IndentWidth: 4
----
+ColumnLimit: 120
 Language: Cpp
-# Force pointers to the type for C++.
 DerivePointerAlignment: false
 PointerAlignment: Left
+ReferenceAlignment: Left
+AlignArrayOfStructures: Right
+AlignConsecutiveDeclarations: 
+    Enabled: true
+    AcrossComments: true
+    AcrossEmptyLines: false
+    AlignFunctionDeclarations: true
+# PackParameters: 
+    # BinPack: OnePerLine
+AllowAllParametersOfDeclarationOnNextLine: false
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 2
+BinPackParameters: OnePerLine
+AlignConsecutiveMacros: AcrossComments

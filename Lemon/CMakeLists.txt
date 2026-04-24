@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
+SET (CMAKE_COLOR_DIAGNOSTICS ON)
 set (CMAKE_CXX_STANDARD 23)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -7,6 +8,7 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/SDL)
 add_subdirectory(vendor/magic_enum)
+# add_subdirectory(vendor/DirectXTK12)
 
 add_library(Lemon SHARED
  "src/Lemon.h"
@@ -64,6 +66,7 @@ add_library(Lemon SHARED
  "src/Lemon/Renderer/Backends/DX/Commands/DXCommandList.h"
  "src/Lemon/Renderer/Backends/DX/Resources/DXSwapchain.h"
  "src/Lemon/Renderer/Backends/DX/Resources/DXSwapchain.cpp"
+ src/Lemon/Renderer/stb_image.h
 )
 
 target_compile_features(Lemon PUBLIC cxx_std_23)
@@ -85,11 +88,17 @@ target_link_libraries(Lemon PUBLIC
         magic_enum::magic_enum
         d3d12          # DirectX 12
         dxgi           # DirectX Graphics Infrastructure
+        dxguid         # DirectX Graphics Infrastructure
         d3dcompiler    # DirectX shader compilation
+        # DirectXTK12     # DirectX Tool Kit for DirectX 12
 )
 
 
 add_custom_command(TARGET Lemon POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/Lemon.dll ${CMAKE_BINARY_DIR}/Sandbox
         COMMAND_EXPAND_LISTS
+)
+add_custom_command(
+    TARGET Lemon POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/assets" "${CMAKE_BINARY_DIR}/Sandbox/assets"
 )

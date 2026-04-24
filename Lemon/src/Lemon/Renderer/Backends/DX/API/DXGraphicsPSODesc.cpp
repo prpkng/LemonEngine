@@ -64,7 +64,14 @@ namespace Lemon::DX
 
     DXGraphicsPSODesc& DXGraphicsPSODesc::SetBlendDesc(const RHI::BlendState& blendDesc)
     {
-        m_Handle.BlendState.IndependentBlendEnable = blendDesc.blendEnable;
+        m_Handle.BlendState.AlphaToCoverageEnable = false;
+        m_Handle.BlendState.RenderTarget[0].BlendEnable = blendDesc.blendEnable;
+        m_Handle.BlendState.RenderTarget[0].SrcBlend = Convert::ToBlendType(blendDesc.srcBlend);
+        m_Handle.BlendState.RenderTarget[0].DestBlend = Convert::ToBlendType(blendDesc.dstBlend);
+        m_Handle.BlendState.RenderTarget[0].BlendOp = Convert::ToBlendOp(blendDesc.blendOp);
+        m_Handle.BlendState.RenderTarget[0].SrcBlendAlpha = Convert::ToBlendType(blendDesc.srcBlendAlpha);
+        m_Handle.BlendState.RenderTarget[0].DestBlendAlpha = Convert::ToBlendType(blendDesc.dstBlendAlpha);
+        m_Handle.BlendState.RenderTarget[0].BlendOpAlpha = Convert::ToBlendOp(blendDesc.blendOpAlpha);
         return *this;
     }
 

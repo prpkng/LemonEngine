@@ -5,23 +5,28 @@
 #include <d3d12.h>
 #include <dxgi1_4.h>
 
-#include "Lemon/Window.h"
-#include "Platform/WindowsWindow.h"
 #include "Backends/DX/DXDevice.h"
 #include "Backends/DX/Resources/DXBuffer.h"
 #include "Backends/DX/Resources/DXSwapchain.h"
+#include "Lemon/Window.h"
+#include "Platform/WindowsWindow.h"
 
 #include "Backends/DX/API/DXPSO.h"
 #include "Backends/DX/API/DXRootSignatureDesc.h"
 #include "Backends/DX/Commands/DXCommandQueue.h"
 
-namespace Lemon::DX
-{
-    class DXPipeline;
+// #include <ResourceUploadBatch.h>
+// #include <DescriptorHeap.h>
+// #include <DirectXHelpers.h>
+
+namespace Lemon::DX {
+class DXPipeline;
 }
 
 class TestDXLayer : public Lemon::Layer {
-public:
+  public:
+    void CreateTexture(const std::shared_ptr<Lemon::DX::DXDevice>&       device,
+                       const std::shared_ptr<Lemon::DX::DXCommandQueue>& graphicsQueue);
 
     void InitShaderPipeline(const std::shared_ptr<Lemon::DX::DXDevice>& device);
 
@@ -32,24 +37,23 @@ public:
 
     void OnUpdate() override;
 
-private:
+  private:
     Lemon::WindowsWindow* window;
 
     static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
 
-    uint32_t frameIndex = 0;
+    uint32_t                                   frameIndex = 0;
     std::array<uint64_t, MAX_FRAMES_IN_FLIGHT> frameFenceValues = {};
 
-    std::shared_ptr<Lemon::DX::DXSwapchain> swapchain;
-
-    std::shared_ptr<Lemon::DX::DXPipeline> pipeline;
-
+    std::shared_ptr<Lemon::DX::DXSwapchain>    swapchain;
+    std::shared_ptr<Lemon::DX::DXPipeline>     pipeline;
     std::shared_ptr<Lemon::DX::DXCommandQueue> graphicsQueue;
-
     std::shared_ptr<Lemon::DX::DXVertexBuffer> vertexBuffer;
+    std::shared_ptr<Lemon::DX::DXIndexBuffer>  indexBuffer;
 
-    std::shared_ptr<Lemon::DX::DXIndexBuffer> indexBuffer;
+    ComPtr<ID3D12DescriptorHeap>  m_SrvHeap;
+    CD3DX12_CPU_DESCRIPTOR_HANDLE m_Srv;
+
+    ComPtr<ID3D12Resource> texture;
+    // std::unique_ptr<DirectX::CommonStates> m_states;
 };
-
-
-

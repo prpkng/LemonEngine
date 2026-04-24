@@ -17,11 +17,14 @@ namespace Lemon::RHI
 
             std::vector<VertexAttribute> inputLayout{};
             std::vector<RootParameter> rootParameters{};
+            std::vector<StaticSamplerDesc> staticSamplers{};
 
             RasterizerState rasterizerState {};
             DepthStencilState depthStencilState {};
             BlendState blendState {};
             SampleState sampleState {};
+
+
 
             PrimitiveTopology topology = PrimitiveTopology::TriangleList;
 

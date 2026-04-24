@@ -1,6 +1,8 @@
 #pragma once
+#include <memory>
 #include <wrl/client.h>
 
+#include "API/DXDescriptorHeap.h"
 #include "d3d12.h"
 #include "Lemon/Renderer/RHI/Interfaces/IBuffer.h"
 #include "Lemon/Renderer/RHI/Interfaces/IDevice.h"
@@ -32,11 +34,12 @@ namespace Lemon::DX
         ~DXDevice() override;
 
         ComPtr<ID3D12Device> GetHandle() const { return m_Handle; }
-
         ComPtr<ID3D12Device> m_Handle;
 
+        
         using RHI::IDevice::CreateIndexBuffer;
         using RHI::IDevice::CreateVertexBuffer;
+        std::unique_ptr<DXDescriptorHeap> m_SrvHeap;
     private:
     };
 } // Lemon::DX
