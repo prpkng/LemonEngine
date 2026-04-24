@@ -164,7 +164,7 @@ void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device) {
     pipeline = std::dynamic_pointer_cast<DXPipeline>(device->CreatePipeline(desc));
 }
 
-constexpr int SIDE_COUNT = 6;
+constexpr int SIDE_COUNT = 8;
 
 void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice) {
     auto device = dxDevice->GetHandle();
@@ -175,24 +175,25 @@ void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice) {
         {0.25f, 0.25f, 0.25f},
         {0.5f, 0.5f}
     });
-    std::vector<uint16_t> indices = {};
+    std::vector<uint16_t> indices = {0};
     const float           incr = 2 * std::numbers::pi_v<float> / SIDE_COUNT;
     for (int i = 0; i < SIDE_COUNT; i++) {
-        const float cos = cosf(incr * (float)i);
-        const float sin = sinf(incr * (float)i);
+        const float cos = cosf(-incr * (float)i);
+        const float sin = sinf(-incr * (float)i);
         Vertex vertex = {
             {cos / 1.5f, sin / 1.5f},
             {1.0f, 1.0f, 1.0f},
             {(cos + 1.0f) / 2.0f, (sin + 1.0f) / 2.0f}
         };
         vertices.push_back(vertex);
-        int next = i + 1;
-        if (next >= SIDE_COUNT)
-            next = 0;
+        // int next = i + 1;
+        // if (next >= SIDE_COUNT)
+            // next = 0;
         indices.push_back(i + 1);
-        indices.push_back(0);
-        indices.push_back(next + 1);
+        // indices.push_back(0);
+        // indices.push_back(next + 1);
     }
+    indices.push_back(1);
 
     // std::vector<Vertex> vertices = {
     //     { {-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, { 0.0f, 1.0f }},
@@ -290,7 +291,7 @@ void TestDXLayer::OnUpdate() {
     ID3D12DescriptorHeap* heaps[] = {m_SrvHeap.Get()};
     dxCmdList->GetHandle()->SetDescriptorHeaps(static_cast<UINT>(std::size(heaps)), heaps);
 
-    cmdList->SetPrimitiveTopology(PrimitiveTopology::TriangleList);
+    cmdList->SetPrimitiveTopology(PrimitiveTopology::TriangleFan);
     cmdList->BindPipeline(pipeline);
 
     dxCmdList->GetHandle()->SetGraphicsRootDescriptorTable(2, m_SrvHeap->GetGPUDescriptorHandleForHeapStart());
@@ -299,7 +300,7 @@ void TestDXLayer::OnUpdate() {
     cmdList->PushConstants(ShaderStage::Vertex, 1, &triangleAngle, 4, 0);
     cmdList->BindVertexBuffer(vertexBuffer);
     cmdList->BindIndexBuffer(indexBuffer);
-    cmdList->DrawIndexed(SIDE_COUNT * 3, 1, 0, 0, 0);
+    cmdList->DrawIndexed(SIDE_COUNT + 2, 1, 0, 0, 0);
 
     // Transition the backBuffer to the present state
     cmdList->TransitionResource(swapchain->GetBackbuffer(backBufferIndex), ResourceState::RenderTarget,
