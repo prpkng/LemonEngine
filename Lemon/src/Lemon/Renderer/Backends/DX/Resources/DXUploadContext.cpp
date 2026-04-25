@@ -13,11 +13,11 @@
 namespace Lemon::DX
 {
 
-DXUploadContext::DXUploadContext(ComPtr<ID3D12Device> device, std::shared_ptr<RHI::ICommandQueue> queue)
-    : m_Device(std::move(device)), m_Queue(queue)
+DXUploadContext::DXUploadContext(std::shared_ptr<DXDevice> device)
+    : m_Device(std::move(device)), m_CopyQueue(m_Device->GetDefaultCopyQueue()), m_GraphicsQueue(m_Device->GetDefaultGraphicsQueue())
 {
     // Borrow a command list from the queue's allocator pool.
-    m_CmdList = queue->GetCommandList();
+    m_CmdList = m_CopyQueue->GetCommandList();
     m_CmdList->Begin();
 }
 
@@ -31,7 +31,7 @@ void DXUploadContext::UploadTexture(RHI::ITexture& dest, std::span<const std::by
     // 1. Ask DX12 how large the staging buffer needs to be
     u64 requiredSize = 0;
     // GetRequiredIntermediateSize(&resourceDesc, 0, 1)
-    m_Device->GetCopyableFootprints(&resourceDesc, 0, 1, // subresource range: mip 0, 1 subresource
+    m_Device->GetHandle()->GetCopyableFootprints(&resourceDesc, 0, 1, // subresource range: mip 0, 1 subresource
                                     0,                   // base offset into staging buffer
                                     nullptr, // we don't need footprint details - UpdateSubresources handles all this
                                     nullptr, nullptr, &requiredSize);
@@ -41,7 +41,7 @@ void DXUploadContext::UploadTexture(RHI::ITexture& dest, std::span<const std::by
     auto bufferDesc      = CD3DX12_RESOURCE_DESC::Buffer(requiredSize);
 
     ComPtr<ID3D12Resource> stagingBuffer;
-    CHECK(m_Device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
+    CHECK(m_Device->GetHandle()->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
                                             D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&stagingBuffer)),
           "Failed to create staging buffer (upload texture)");
 
@@ -69,9 +69,10 @@ void DXUploadContext::UploadTexture(RHI::ITexture& dest, std::span<const std::by
     // After CopyTextureRegion the texture is still COPY_DEST.
     // We transition here so it's ready to sample after Flush() returns.
     m_CmdList->TransitionResource(dxDest.GetResource(), RHI::ResourceState::CopyDest,
-                                  RHI::ResourceState::PixelShaderResource);
+                                  RHI::ResourceState::Common);
 
     // Hold staging buffer alive until GPU confirms completion
+    m_PendingTransitions.push_back(&dest);
     m_PendingUploads.push_back({std::move(stagingBuffer)});
     m_PendingStagingBytes += requiredSize;
 }
@@ -84,7 +85,7 @@ void DXUploadContext::UploadBuffer(RHI::IBuffer& dest, std::span<const std::byte
     auto bufferDesc      = CD3DX12_RESOURCE_DESC::Buffer(data.size_bytes());
 
     ComPtr<ID3D12Resource> stagingBuffer;
-    CHECK(m_Device->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
+    CHECK(m_Device->GetHandle()->CreateCommittedResource(&uploadHeapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc,
                                             D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&stagingBuffer)),
           "Failed to create staging buffer (upload buffer)");
 
@@ -109,7 +110,7 @@ void DXUploadContext::UploadBuffer(RHI::IBuffer& dest, std::span<const std::byte
 
 void DXUploadContext::Flush() {
     const u64 fenceValue = FlushAsync();
-    m_Queue->CpuWaitForValue(fenceValue);
+    m_CopyQueue->CpuWaitForValue(fenceValue);
 
     // GPU confirmed done - staging buffers safe to release
     m_PendingUploads.clear();
@@ -120,10 +121,44 @@ u64 DXUploadContext::FlushAsync()
 {
     m_CmdList->End();
 
-    m_LastFenceValue = m_Queue->SubmitSingle(*m_CmdList);
+    const u64 copyDone = m_CopyQueue->SubmitSingle(*m_CmdList);
+
+
+    if (!m_PendingTransitions.empty()) {
+        // Graphics queue waits for copy queue to finish - GPU side only
+        m_GraphicsQueue->GpuWaitForQueue(*m_CopyQueue, copyDone);
+
+        auto transitionList = m_GraphicsQueue->GetCommandList();
+        transitionList->Begin();
+
+        auto* rawList = dynamic_cast<DXCommandList&>(*transitionList).GetHandle();
+
+        std::vector<D3D12_RESOURCE_BARRIER> barriers;
+        barriers.reserve(m_PendingTransitions.size());
+
+        for (auto* texture : m_PendingTransitions) {
+            auto& dxTexture = dynamic_cast<DXTexture&>(*texture);
+            barriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(
+                dxTexture.GetResource(),
+                D3D12_RESOURCE_STATE_COMMON,
+                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+        }
+
+        rawList->ResourceBarrier(
+            static_cast<UINT>(barriers.size()), barriers.data());
+
+        transitionList->End();
+        m_LastFenceValue = m_GraphicsQueue -> SubmitSingle(*transitionList);
+
+        m_PendingTransitions.clear();
+    } else {
+        m_LastFenceValue = copyDone;
+    }
+
+    
 
     // Reborrow a fresh list for the next batch of uploads
-    m_CmdList = m_Queue->GetCommandList();
+    m_CmdList = m_CopyQueue->GetCommandList();
     m_CmdList->Begin();
 
     return m_LastFenceValue;
@@ -131,7 +166,7 @@ u64 DXUploadContext::FlushAsync()
 
 bool DXUploadContext::IsComplete(u64 fenceValue) const
 {
-    return m_Queue->GetCompletedValue() >= fenceValue;
+    return m_CopyQueue->GetCompletedValue() >= fenceValue;
 }
 
 u64 DXUploadContext::GetPendingStagingBytes() const

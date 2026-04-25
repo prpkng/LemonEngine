@@ -33,8 +33,6 @@
 #include "d3dx12_root_signature.h"
 #include "dxgiformat.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 // #include <DescriptorHeap.h>
 // #include <DirectXHelpers.h>
@@ -66,19 +64,7 @@ enum Descriptors { Texture, Count };
 void TestDXLayer::CreateTexture(const std::shared_ptr<DXDevice>&       device,
                                 const std::shared_ptr<DXCommandQueue>& graphicsQueue)
 {
-    ITexture::Desc texDesc(1024, 1024, Format::RGBA8_UNORM);
-
-    texture = std::dynamic_pointer_cast<DXTexture>(device->CreateTexture(texDesc));
-
-    int       width, height, channels;
-    const u8* data = stbi_load("assets/test.png", &width, &height, &channels, 4);
-
-    auto uploadContext = device->CreateUploadContext();
-
-    size_t size = width * height * channels;
-    uploadContext->UploadTexture(*texture, {reinterpret_cast<const std::byte*>(data), size}, width * channels);
-
-    uploadContext->Flush();
+    texture = std::dynamic_pointer_cast<DXTexture>(device->LoadTexture("assets/test.png"));
     
     textureView = std::unique_ptr<DXTextureView>(dynamic_cast<DXTextureView*>(texture->CreateSRV().release()));
 }
@@ -191,7 +177,9 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
 
     InitBuffers(device);
 
-    CreateTexture(device, graphicsQueue);
+    texture = std::dynamic_pointer_cast<DXTexture>(device->LoadTexture("assets/test.png"));
+    
+    textureView = std::unique_ptr<DXTextureView>(dynamic_cast<DXTextureView*>(texture->CreateSRV().release()));
 }
 
 TestDXLayer::~TestDXLayer() = default;

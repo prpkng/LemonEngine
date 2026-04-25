@@ -193,7 +193,7 @@ std::shared_ptr<RHI::ITexture> DXDevice::CreateTexture(const RHI::ITexture::Desc
     textureDesc.Flags               = BuildResourceFlags(desc);
 
     // Determine initial state and clear value
-    D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST;
+    D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON;
 
     std::optional<D3D12_CLEAR_VALUE> clearValue;
 
@@ -232,8 +232,7 @@ std::shared_ptr<RHI::ITexture> DXDevice::CreateTexture(const RHI::ITexture::Desc
 }
 
 std::shared_ptr<RHI::IUploadContext> DXDevice::CreateUploadContext() {
-    auto copyQueue = GetDefaultGraphicsQueue();
-    return std::make_unique<DXUploadContext>(m_Handle, copyQueue);
+    return std::make_unique<DXUploadContext>(shared_from_this());
 }
 
 

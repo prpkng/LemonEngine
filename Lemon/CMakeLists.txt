@@ -73,12 +73,11 @@ add_library(Lemon SHARED
  "src/Lemon/Renderer/Backends/DX/Commands/DXCommandQueue.cpp"
  "src/Lemon/Renderer/Backends/DX/Commands/DXCommandList.cpp"
  "src/Lemon/Renderer/Backends/DX/Commands/DXCommandList.h"
- "src/Lemon/Renderer/stb_image.h"
+ src/Lemon/Renderer/RHI/Interfaces/IDevice.cpp
  )
 
 target_compile_features(Lemon PUBLIC cxx_std_23)
-target_include_directories(Lemon PUBLIC src/)
-target_include_directories(Lemon PUBLIC vendor/dx-headers)
+target_include_directories(Lemon PUBLIC src/ vendor/dx-headers vendor/include)
 
 target_precompile_headers(Lemon PRIVATE src/lmpch.h)
 

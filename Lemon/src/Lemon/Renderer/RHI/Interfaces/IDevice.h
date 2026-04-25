@@ -2,6 +2,7 @@
 
 #include <Lemon/Core.h>
 #include <memory>
+#include <string_view>
 #include <utility>
 #include "IPipeline.h"
 #include "IBuffer.h"
@@ -55,6 +56,8 @@ namespace Lemon::RHI
 
             return CreateVertexBuffer(vertexDesc);
         };
+
+        [[nodiscard]] std::shared_ptr<ITexture> LoadTexture(std::string_view path, Format format = Format::RGBA8_UNORM, u32 mipLevels = 1);
 
         [[nodiscard]] virtual std::shared_ptr<ICommandQueue> GetDefaultCopyQueue() = 0;
         [[nodiscard]] virtual std::shared_ptr<ICommandQueue> GetDefaultGraphicsQueue() = 0;

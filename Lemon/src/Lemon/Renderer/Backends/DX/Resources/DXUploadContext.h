@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../API/Helpers.h"
+#include "Lemon/Renderer/Backends/DX/DXDevice.h"
 #include "Lemon/Renderer/RHI/Interfaces/IBuffer.h"
 #include "Lemon/Renderer/RHI/Interfaces/ICommandQueue.h"
 #include "Lemon/Renderer/RHI/Interfaces/ITexture.h"
@@ -18,7 +19,7 @@ namespace Lemon::DX
 class DXUploadContext final : public RHI::IUploadContext
 {
 public:
-    DXUploadContext(ComPtr<ID3D12Device> device, std::shared_ptr<RHI::ICommandQueue> queue);
+    DXUploadContext(std::shared_ptr<DXDevice> device);
 
     void UploadTexture(RHI::ITexture& dest, std::span<const std::byte> pixels, u32 srcRowPitch) override;
 
@@ -32,10 +33,12 @@ public:
     [[nodiscard]] u64 GetPendingStagingBytes() const override;
 
 private:
-    ComPtr<ID3D12Device>                m_Device;
-    std::shared_ptr<RHI::ICommandQueue> m_Queue;
+    std::shared_ptr<DXDevice>           m_Device;
+    std::shared_ptr<RHI::ICommandQueue> m_CopyQueue;
+    std::shared_ptr<RHI::ICommandQueue> m_GraphicsQueue;
     std::shared_ptr<RHI::ICommandList>  m_CmdList;
     std::vector<PendingUpload>          m_PendingUploads;
+    std::vector<RHI::ITexture*>             m_PendingTransitions;
     u64                                 m_PendingStagingBytes = 0;
     u64                                 m_LastFenceValue      = 0;
 };
