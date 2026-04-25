@@ -232,19 +232,19 @@ std::shared_ptr<RHI::ITexture> DXDevice::CreateTexture(const RHI::ITexture::Desc
 }
 
 std::shared_ptr<RHI::IUploadContext> DXDevice::CreateUploadContext() {
-    auto copyQueue = GetGraphicsQueue();
+    auto copyQueue = GetDefaultGraphicsQueue();
     return std::make_unique<DXUploadContext>(m_Handle, copyQueue);
 }
 
 
-std::shared_ptr<RHI::ICommandQueue> DXDevice::GetCopyQueue() {
+std::shared_ptr<RHI::ICommandQueue> DXDevice::GetDefaultCopyQueue() {
     if (m_DefaultCopyQueue != nullptr) return m_DefaultCopyQueue;
 
     m_DefaultCopyQueue = CreateCommandQueue(RHI::QueueType::Copy);
     return m_DefaultCopyQueue;
 }
 
-std::shared_ptr<RHI::ICommandQueue> DXDevice::GetGraphicsQueue() {
+std::shared_ptr<RHI::ICommandQueue> DXDevice::GetDefaultGraphicsQueue() {
     if (m_DefaultGraphicsQueue != nullptr) return m_DefaultGraphicsQueue;
 
     m_DefaultGraphicsQueue = CreateCommandQueue(RHI::QueueType::Graphics);

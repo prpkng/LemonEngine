@@ -38,8 +38,8 @@ public:
     [[nodiscard]] std::shared_ptr<RHI::IUploadContext> CreateUploadContext() override;
 
 
-    [[nodiscard]] std::shared_ptr<RHI::ICommandQueue> GetCopyQueue() override;
-    [[nodiscard]] std::shared_ptr<RHI::ICommandQueue> GetGraphicsQueue() override;
+    [[nodiscard]] std::shared_ptr<RHI::ICommandQueue> GetDefaultCopyQueue() override;
+    [[nodiscard]] std::shared_ptr<RHI::ICommandQueue> GetDefaultGraphicsQueue() override;
 
 
 

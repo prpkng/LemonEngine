@@ -56,8 +56,8 @@ namespace Lemon::RHI
             return CreateVertexBuffer(vertexDesc);
         };
 
-        [[nodiscard]] virtual std::shared_ptr<ICommandQueue> GetCopyQueue() = 0;
-        [[nodiscard]] virtual std::shared_ptr<ICommandQueue> GetGraphicsQueue() = 0;
+        [[nodiscard]] virtual std::shared_ptr<ICommandQueue> GetDefaultCopyQueue() = 0;
+        [[nodiscard]] virtual std::shared_ptr<ICommandQueue> GetDefaultGraphicsQueue() = 0;
     private:
     };
 }

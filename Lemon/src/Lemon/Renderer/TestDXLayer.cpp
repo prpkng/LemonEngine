@@ -178,7 +178,7 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
 
     device = std::make_shared<DXDevice>(desc);
 
-    graphicsQueue = std::dynamic_pointer_cast<DXCommandQueue>(device->CreateCommandQueue(QueueType::Graphics));
+    graphicsQueue = std::dynamic_pointer_cast<DXCommandQueue>(device->GetDefaultGraphicsQueue());
 
     auto swapChainDesc = ISwapchain::Desc{.windowHandle = hwnd,
                                           .width        = window->GetWidth(),
