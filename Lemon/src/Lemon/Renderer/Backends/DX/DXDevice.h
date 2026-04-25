@@ -11,7 +11,6 @@
 #include "Lemon/Renderer/RHI/Interfaces/IUploadContext.h"
 #include "d3d12.h"
 
-
 using Microsoft::WRL::ComPtr;
 
 namespace Lemon::DX
@@ -33,15 +32,12 @@ public:
     [[nodiscard]] std::shared_ptr<RHI::ICommandQueue> CreateCommandQueue(RHI::QueueType type) override;
     [[nodiscard]] std::shared_ptr<RHI::ISwapchain> CreateSwapchain(const std::shared_ptr<RHI::ICommandQueue>& cmdQueue,
                                                                    const RHI::ISwapchain::Desc& desc) override;
-    [[nodiscard]] std::shared_ptr<RHI::ITexture>   CreateTexture(const RHI::ITexture::Desc& desc) override;
+    [[nodiscard]] std::shared_ptr<RHI::ITexture>   CreateTexture(RHI::ITexture::Desc desc) override;
 
     [[nodiscard]] std::shared_ptr<RHI::IUploadContext> CreateUploadContext() override;
 
-
     [[nodiscard]] std::shared_ptr<RHI::ICommandQueue> GetDefaultCopyQueue() override;
     [[nodiscard]] std::shared_ptr<RHI::ICommandQueue> GetDefaultGraphicsQueue() override;
-
-
 
     explicit DXDevice(const Desc& desc);
     ~DXDevice() override;
@@ -56,8 +52,7 @@ public:
     std::unique_ptr<DXDescriptorHeap> m_DsvHeap;
 
 private:
-    std::shared_ptr<RHI::ICommandQueue> m_DefaultCopyQueue = nullptr;
+    std::shared_ptr<RHI::ICommandQueue> m_DefaultCopyQueue     = nullptr;
     std::shared_ptr<RHI::ICommandQueue> m_DefaultGraphicsQueue = nullptr;
-
 };
 } // namespace Lemon::DX

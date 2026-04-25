@@ -42,6 +42,7 @@ namespace Lemon::DX
         // In DX12 lists are created open - no explicit Begin() needed,
         // but we call it anyway to match the RHI contract
         return std::make_unique<DXCommandList>(
+            m_Device,
             std::move(cmdList),
             std::move(allocator),
             m_QueueType);

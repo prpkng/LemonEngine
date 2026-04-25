@@ -25,7 +25,8 @@ struct ISwapchain {
 
     virtual void Resize(u32 width, u32 height) = 0;
 
-    [[nodiscard]] virtual void* GetBackbuffer(u32 index) const = 0;
+    [[nodiscard]] virtual std::shared_ptr<ITexture> GetBackbuffer(u32 index) const = 0;
+    [[nodiscard]] virtual RHI::ITextureView* GetBackbufferView(u32 index) const = 0;
     [[nodiscard]] virtual u32 GetBackbufferCount() const = 0;
     [[nodiscard]] virtual Format GetBackbufferFormat() const = 0;
 };

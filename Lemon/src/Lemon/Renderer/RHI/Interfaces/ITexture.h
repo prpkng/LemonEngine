@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Lemon/Renderer/RHI/Types/RHICommandTypes.h"
 #include "Lemon/Renderer/RHI/Types/RHITypes.h"
 #include <Lemon/Core.h>
 
@@ -50,10 +51,11 @@ struct ITexture {
         bool isRenderTarget       = false;
         bool isDepthStencil       = false;
         bool allowUnorderedAccess = false;
+        ResourceState initialState = ResourceState::Common;
         std::string debugName;
 
         Desc() = default;
-        Desc(u32 width, u32 height, Format format, u32 mipLevels = 1) : width(width), height(height), format(format), mipLevels(mipLevels) {}
+        Desc(u32 width, u32 height, Format format, u32 mipLevels = 1) : width(width), height(height), mipLevels(mipLevels), format(format) {}
     };
 
     virtual ~ITexture() = default;
@@ -62,6 +64,7 @@ struct ITexture {
     [[nodiscard]] virtual u32 GetWidth() const = 0;
     [[nodiscard]] virtual u32 GetHeight() const = 0;
     [[nodiscard]] virtual u32 GetMipLevels() const = 0;
+    [[nodiscard]] virtual ResourceState GetCurrentState() const = 0;
 
     [[nodiscard]] virtual std::unique_ptr<ITextureView> CreateView(const ITextureView::Desc& desc) = 0;
 
@@ -89,6 +92,7 @@ struct ITexture {
             .aspect = TextureAspect::Depth,
         });
     }
+
 };
 
 } // namespace Lemon::RHI

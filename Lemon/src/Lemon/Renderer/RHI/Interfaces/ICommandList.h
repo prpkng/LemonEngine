@@ -6,11 +6,13 @@
 #include "IPipeline.h"
 #include <cstddef>
 #include <span>
+#include <utility>
 
-
+#include "Lemon/Renderer/RHI/Interfaces/ITexture.h"
 #include "Lemon/Renderer/RHI/Types/RHICommandTypes.h"
 
-namespace Lemon::RHI {
+namespace Lemon::RHI
+{
 
 /// \brief The main interface for GPU command recording
 ///
@@ -24,7 +26,7 @@ struct ICommandList {
     virtual ~ICommandList() = default;
 
     virtual void Begin() = 0;
-    virtual void End() = 0;
+    virtual void End()   = 0;
 
     virtual void BindPipeline(std::shared_ptr<IPipeline> pipeline) = 0;
 
@@ -44,18 +46,33 @@ struct ICommandList {
     virtual void SetPrimitiveTopology(PrimitiveTopology topology) = 0;
 
     // === Barriers ===
-    virtual void TransitionResource(void* resource, ResourceState before, ResourceState after) = 0;
+    virtual void TransitionResource(void* resource, ResourceState before, ResourceState after)   = 0;
+    virtual void TransitionTexture(ITexture* texture, ResourceState before, ResourceState after) = 0;
+    virtual void TransitionTexture(ITexture* texture, ResourceState after)                       = 0;
 
     // === Viewport / Scissor ===
-    virtual void SetViewport(const Viewport& viewport) = 0;
+    virtual void SetViewport(const Viewport& viewport)  = 0;
     virtual void SetScissor(const ScissorRect& scissor) = 0;
 
+    // === TEXTURES ===
+
+    virtual void SetShaderTexture(u32 slot, const ITextureView* view)                = 0;
+    virtual void SetRenderTargets(std::vector<const ITextureView*> renderTargetViews,
+                                  const ITextureView*              depthStencilView) = 0;
+
+    void SetRenderTargets(std::vector<const ITextureView*> renderTargetViews)
+    {
+        SetRenderTargets(std::move(renderTargetViews), nullptr);
+    }
+
     // === Clear ===
-    virtual void ClearRenderTarget(void* renderTarget, const std::array<float, 4>& color) = 0;
+    virtual void ClearRenderTarget(const ITextureView* rtv, const std::array<float, 4>& color) = 0;
+    virtual void ClearDepthStencil(const ITextureView* dsv, float depth, uint8_t stencil)      = 0;
+    void         ClearDepthStencil(const ITextureView* dsv, float depth = 1.0f) { ClearDepthStencil(dsv, depth, 0); }
 
     // === Buffers ===
     virtual void BindVertexBuffer(std::shared_ptr<IVertexBuffer> buffer) = 0;
-    virtual void BindIndexBuffer(std::shared_ptr<IIndexBuffer> buffer) = 0;
+    virtual void BindIndexBuffer(std::shared_ptr<IIndexBuffer> buffer)   = 0;
 
     // === Push constants / Root constants ===
 

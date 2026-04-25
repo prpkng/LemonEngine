@@ -36,7 +36,7 @@ namespace Lemon::RHI
         
         [[nodiscard]] virtual std::shared_ptr<ISwapchain> CreateSwapchain(const std::shared_ptr<ICommandQueue>& cmdQueue, const ISwapchain::Desc& desc) = 0;
 
-        [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTexture(const ITexture::Desc& desc) = 0;
+        [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTexture(RHI::ITexture::Desc desc) = 0;
 
         [[nodiscard]] virtual std::shared_ptr<IUploadContext> CreateUploadContext() = 0;
 

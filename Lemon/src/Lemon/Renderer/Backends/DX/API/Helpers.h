@@ -251,7 +251,7 @@ using namespace RHI;
         return D3D12_RESOURCE_STATE_COMMON;
     case ResourceState::VertexAndConstantBuffer:
         return D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-    case ResourceState::VertexShaderResource:
+    case ResourceState::NonPixelShaderResource:
     case ResourceState::ShaderResource:
         return D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
     case ResourceState::PixelShaderResource:

@@ -30,7 +30,7 @@ enum class ResourceState : u32 {
     Common,
     DepthWrite,
     DepthRead,
-    VertexShaderResource,
+    NonPixelShaderResource,
     PixelShaderResource,
     ShaderResource,
     CopySource,

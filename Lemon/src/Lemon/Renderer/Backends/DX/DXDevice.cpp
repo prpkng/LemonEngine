@@ -5,6 +5,7 @@
 #include "API/DXRootSignatureDesc.h"
 #include "API/Helpers.h"
 #include "Commands/DXCommandQueue.h"
+#include "Lemon/Renderer/Backends/DX/API/Helpers.h"
 #include "Lemon/Renderer/RHI/Interfaces/ITexture.h"
 #include "Lemon/Renderer/RHI/Types/RHICommandTypes.h"
 #include "Pipelines/DXPipeline.h"
@@ -177,7 +178,7 @@ static D3D12_RESOURCE_FLAGS BuildResourceFlags(const RHI::ITexture::Desc& desc) 
     return flags;
 }
 
-std::shared_ptr<RHI::ITexture> DXDevice::CreateTexture(const RHI::ITexture::Desc& desc)
+std::shared_ptr<RHI::ITexture> DXDevice::CreateTexture(RHI::ITexture::Desc desc)
 {
     // Build the D3D12 resource description
     D3D12_RESOURCE_DESC textureDesc = {};
@@ -193,18 +194,16 @@ std::shared_ptr<RHI::ITexture> DXDevice::CreateTexture(const RHI::ITexture::Desc
     textureDesc.Flags               = BuildResourceFlags(desc);
 
     // Determine initial state and clear value
-    D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON;
-
     std::optional<D3D12_CLEAR_VALUE> clearValue;
 
-    if (desc.isRenderTarget) {
-        initialState = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    if (desc.initialState == RHI::ResourceState::Common && desc.isRenderTarget) {
+        desc.initialState = RHI::ResourceState::RenderTarget;
         clearValue   = D3D12_CLEAR_VALUE{
             .Format = Convert::ToFormat(desc.format),
             .Color  = {0.0f, 0.0f, 0.0f, 1.0f},
         };
-    } else if (desc.isDepthStencil) {
-        initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+    } else if (desc.initialState == RHI::ResourceState::Common && desc.isDepthStencil) {
+        desc.initialState = RHI::ResourceState::DepthWrite;
         clearValue   = D3D12_CLEAR_VALUE{
             .Format       = Convert::ToFormat(desc.format),
             .DepthStencil = {1.0f, 0},
@@ -215,7 +214,7 @@ std::shared_ptr<RHI::ITexture> DXDevice::CreateTexture(const RHI::ITexture::Desc
     CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
 
     ComPtr<ID3D12Resource> resource;
-    CHECK(GetHandle()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &textureDesc, initialState,
+    CHECK(GetHandle()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &textureDesc, Convert::ToResourceState(desc.initialState),
                                                clearValue.has_value() ? &clearValue.value() : nullptr,
                                                IID_PPV_ARGS(&resource)),
           "Failed to create texture resource");
@@ -227,12 +226,12 @@ std::shared_ptr<RHI::ITexture> DXDevice::CreateTexture(const RHI::ITexture::Desc
     }
 
     /// Pass everything to DXTexture
-    return std::make_unique<DXTexture>(GetHandle(), std::move(resource), m_SrvHeap.get(), m_RtvHeap.get(),
+    return std::make_shared<DXTexture>(GetHandle(), std::move(resource), m_SrvHeap.get(), m_RtvHeap.get(),
                                        m_DsvHeap.get(), desc);
 }
 
 std::shared_ptr<RHI::IUploadContext> DXDevice::CreateUploadContext() {
-    return std::make_unique<DXUploadContext>(shared_from_this());
+    return std::make_shared<DXUploadContext>(shared_from_this());
 }
 
 

@@ -27,12 +27,6 @@
 #include "Backends/DX/Commands/DXCommandList.h"
 #include "Backends/DX/Pipelines/DXPipeline.h"
 #include "SDL3/SDL_timer.h"
-#include "d3dx12_barriers.h"
-#include "d3dx12_core.h"
-#include "d3dx12_resource_helpers.h"
-#include "d3dx12_root_signature.h"
-#include "dxgiformat.h"
-
 
 // #include <DescriptorHeap.h>
 // #include <DirectXHelpers.h>
@@ -65,7 +59,7 @@ void TestDXLayer::CreateTexture(const std::shared_ptr<DXDevice>&       device,
                                 const std::shared_ptr<DXCommandQueue>& graphicsQueue)
 {
     texture = std::dynamic_pointer_cast<DXTexture>(device->LoadTexture("assets/test.png"));
-    
+
     textureView = std::unique_ptr<DXTextureView>(dynamic_cast<DXTextureView*>(texture->CreateSRV().release()));
 }
 
@@ -178,7 +172,7 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
     InitBuffers(device);
 
     texture = std::dynamic_pointer_cast<DXTexture>(device->LoadTexture("assets/test.png"));
-    
+
     textureView = std::unique_ptr<DXTextureView>(dynamic_cast<DXTextureView*>(texture->CreateSRV().release()));
 }
 
@@ -198,35 +192,28 @@ void TestDXLayer::OnUpdate()
     if (waitValue > 0)
         graphicsQueue->CpuWaitForValue(waitValue);
 
-    auto                 cmdList   = graphicsQueue->GetCommandList().release();
-    const DXCommandList* dxCmdList = dynamic_cast<DXCommandList*>(cmdList);
+    auto cmdList = graphicsQueue->GetCommandList();
     cmdList->Begin();
 
     const UINT backBufferIndex = swapchain->AcquireNextBackbuffer();
 
     // Transition the backBuffer to the render target state
-    cmdList->TransitionResource(swapchain->GetBackbuffer(backBufferIndex), ResourceState::Present,
-                                ResourceState::RenderTarget);
-
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = swapchain->GetBackbufferView(backBufferIndex);
+    cmdList->TransitionTexture(swapchain->GetBackbuffer(backBufferIndex).get(), ResourceState::RenderTarget);
 
     // Clear the render target
-    cmdList->ClearRenderTarget(&rtvHandle, {0.0f, 0.2f, 0.4f, 1.0f});
+    cmdList->ClearRenderTarget(swapchain->GetBackbufferView(backBufferIndex), {0.0f, 0.2f, 0.4f, 1.0f});
 
     // Set viewport and scissor
     cmdList->SetViewport(
-        {0.0f, 0.0f, static_cast<float>(window->GetWidth()), static_cast<float>(window->GetHeight()), 0.0f, 0.0f});
+        {0.0f, 0.0f, static_cast<float>(window->GetWidth()), static_cast<float>(window->GetHeight()), 0.0f, 1.0f});
     cmdList->SetScissor({0, 0, LONG_MAX, LONG_MAX});
 
-    dxCmdList->GetHandle()->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-
-    ID3D12DescriptorHeap* heaps[] = {device->m_SrvHeap->GetHeap()};
-    dxCmdList->GetHandle()->SetDescriptorHeaps(static_cast<UINT>(std::size(heaps)), heaps);
+    cmdList->SetRenderTargets({swapchain->GetBackbufferView(backBufferIndex)}, nullptr);
 
     cmdList->SetPrimitiveTopology(PrimitiveTopology::TriangleFan);
     cmdList->BindPipeline(pipeline);
 
-    dxCmdList->GetHandle()->SetGraphicsRootDescriptorTable(2, textureView->GetGPUHandle());
+    cmdList->SetShaderTexture(2, textureView.get());
 
     cmdList->PushConstants(ShaderStage::Vertex, 0, &time, 4, 0);
     cmdList->PushConstants(ShaderStage::Vertex, 1, &triangleAngle, 4, 0);
@@ -235,14 +222,14 @@ void TestDXLayer::OnUpdate()
     cmdList->DrawIndexed(SIDE_COUNT + 2, 1, 0, 0, 0);
 
     // Transition the backBuffer to the present state
-    cmdList->TransitionResource(swapchain->GetBackbuffer(backBufferIndex), ResourceState::RenderTarget,
-                                ResourceState::Present);
+    cmdList->TransitionTexture(swapchain->GetBackbuffer(backBufferIndex).get(), ResourceState::Present);
 
     cmdList->End();
 
     const u64 frameDone = graphicsQueue->SubmitSingle(*cmdList);
 
     swapchain->Present(1);
+    swapchain->ResetBackbufferStates();
 
     // Wait on the CPU for the GPU frame to finish
     graphicsQueue->CpuWaitForValue(frameDone - 1);
@@ -250,6 +237,4 @@ void TestDXLayer::OnUpdate()
     frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
     triangleAngle += 2;
     triangleColor = (triangleColor + 1) % 255;
-
-    delete cmdList;
 }

@@ -26,9 +26,9 @@ DXTexture::DXTexture(ComPtr<ID3D12Device>   device,
                      DXDescriptorHeap*      srvUavHeap,
                      DXDescriptorHeap*      rtvHeap,
                      DXDescriptorHeap*      dsvHeap,
-                     const ITexture::Desc&  desc)
+                     ITexture::Desc  desc)
     : m_Device(std::move(device)), m_Resource(std::move(resource)), m_SrvUavHeap(srvUavHeap), m_RtvHeap(rtvHeap),
-      m_DsvHeap(dsvHeap), m_Desc(desc)
+      m_DsvHeap(dsvHeap), m_Desc(std::move(desc)), m_CurrentState(desc.initialState)
 {
 }
 
@@ -72,7 +72,7 @@ DXTexture::CreateSRVInternal(const RHI::ITextureView::Desc& desc, RHI::Format fm
 
 std::unique_ptr<RHI::ITextureView> DXTexture::CreateRTVInternal(const RHI::ITextureView::Desc& desc, RHI::Format fmt)
 {
-    auto allocation = m_SrvUavHeap->Allocate();
+    auto allocation = m_RtvHeap->Allocate();
 
     D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
     rtvDesc.Format                        = Convert::ToFormat(fmt);
@@ -85,7 +85,7 @@ std::unique_ptr<RHI::ITextureView> DXTexture::CreateRTVInternal(const RHI::IText
 
 std::unique_ptr<RHI::ITextureView> DXTexture::CreateDSVInternal(const RHI::ITextureView::Desc& desc, RHI::Format fmt)
 {
-    auto allocation = m_SrvUavHeap->Allocate();
+    auto allocation = m_DsvHeap->Allocate();
 
     D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
     dsvDesc.Format                        = Convert::ToFormat(fmt);
