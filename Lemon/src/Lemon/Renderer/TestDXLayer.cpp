@@ -11,6 +11,7 @@
 #include "Backends/DX/Commands/DXCommandQueue.h"
 #include "Backends/DX/DXDevice.h"
 #include "Backends/DX/Resources/DXBuffer.h"
+#include "Backends/DX/Resources/DXTexture.h"
 #include "Lemon/Renderer/RHI/Types/RHICommandTypes.h"
 #include "Platform/WindowsWindow.h"
 #include "RHI/Helpers/Builders.h"
@@ -61,19 +62,10 @@ enum Descriptors { Texture, Count };
 
 void TestDXLayer::CreateTexture(const std::shared_ptr<DXDevice>&       device,
                                 const std::shared_ptr<DXCommandQueue>& graphicsQueue) {
-    D3D12_RESOURCE_DESC textureDesc = {};
-    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    textureDesc.Height = 1024;
-    textureDesc.SampleDesc.Count = 1;
-    textureDesc.Width = 1024;
-    textureDesc.MipLevels = textureDesc.DepthOrArraySize = 1;
+    ITexture::Desc texDesc(1024, 1024, Format::RGBA8_UNORM);
 
-    CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
-    CHECK(device->GetHandle()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &textureDesc,
-                                                       D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
-                                                       IID_PPV_ARGS(texture.ReleaseAndGetAddressOf())),
-          "Failed to create texture resource");
+    texture = std::dynamic_pointer_cast<DXTexture>(device->CreateTexture(texDesc));
+
 
     int       width, height, channels;
     const u8* data = stbi_load("assets/test.png", &width, &height, &channels, 4);
@@ -88,7 +80,7 @@ void TestDXLayer::CreateTexture(const std::shared_ptr<DXDevice>&       device,
     ComPtr<ID3D12Resource> uploadBuffer;
     {
         const CD3DX12_HEAP_PROPERTIES heapProps{D3D12_HEAP_TYPE_UPLOAD};
-        const auto                    uploadBufferSize = GetRequiredIntermediateSize(texture.Get(), 0, 1);
+        const auto                    uploadBufferSize = GetRequiredIntermediateSize(texture->GetResource(), 0, 1);
 
         const auto resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
         CHECK(device->GetHandle()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc,
@@ -103,17 +95,12 @@ void TestDXLayer::CreateTexture(const std::shared_ptr<DXDevice>&       device,
     dxCmdList->Begin();
 
     // write commands to copy data to upload texture (copying each subresource)
-    UpdateSubresources(dxCmdList->GetHandle(), texture.Get(), uploadBuffer.Get(), 0, 0,
+    UpdateSubresources(dxCmdList->GetHandle(), texture->GetResource(), uploadBuffer.Get(), 0, 0,
                        1, // Count
                        &textureData);
 
     // write commands to transition texture to texture state
-    {
-        const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST,
-                                                                  D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        dxCmdList->GetHandle()->ResourceBarrier(1, &barrier);
-        // cmdList->TransitionResource(texture.Get(), ResourceState::CopyDest, ResourceState::ShaderResource);
-    }
+    cmdList->TransitionResource(texture->GetResource(), ResourceState::CopyDest, ResourceState::ShaderResource);
 
     dxCmdList->End();
 
@@ -122,25 +109,7 @@ void TestDXLayer::CreateTexture(const std::shared_ptr<DXDevice>&       device,
     // Wait for the GPU to finish executing the command list
     graphicsQueue->CpuWaitForValue(frameDone);
 
-    {
-        const D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-                                                     .NumDescriptors = 1,
-                                                     .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE};
-        CHECK(device->GetHandle()->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(m_SrvHeap.ReleaseAndGetAddressOf())),
-              "Failed to create SRV descriptor heap");
-    }
-
-    m_Srv = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_SrvHeap->GetCPUDescriptorHandleForHeapStart());
-
-    // Create the descriptor in the heap
-    {
-        const D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{.Format = textureDesc.Format,
-                                                      .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
-                                                      .Shader4ComponentMapping =
-                                                          D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-                                                      .Texture2D = {.MipLevels = textureDesc.MipLevels}};
-        device->GetHandle()->CreateShaderResourceView(texture.Get(), &srvDesc, m_Srv);
-    }
+    textureView = std::unique_ptr<DXTextureView>(dynamic_cast<DXTextureView*>(texture->CreateSRV().release()));
 }
 
 void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device) {
@@ -233,7 +202,8 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
     desc.initialWidth = window->GetWidth();
     desc.initialHeight = window->GetHeight();
     desc.nativeWindowPtr = hwnd;
-    const auto device = std::make_shared<DXDevice>(desc);
+    
+    device = std::make_shared<DXDevice>(desc);
 
     graphicsQueue = std::dynamic_pointer_cast<DXCommandQueue>(device->CreateCommandQueue(QueueType::Graphics));
 
@@ -288,13 +258,13 @@ void TestDXLayer::OnUpdate() {
 
     dxCmdList->GetHandle()->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
-    ID3D12DescriptorHeap* heaps[] = {m_SrvHeap.Get()};
+    ID3D12DescriptorHeap* heaps[] = { device->m_SrvHeap->GetHeap() };
     dxCmdList->GetHandle()->SetDescriptorHeaps(static_cast<UINT>(std::size(heaps)), heaps);
 
     cmdList->SetPrimitiveTopology(PrimitiveTopology::TriangleFan);
     cmdList->BindPipeline(pipeline);
 
-    dxCmdList->GetHandle()->SetGraphicsRootDescriptorTable(2, m_SrvHeap->GetGPUDescriptorHandleForHeapStart());
+    dxCmdList->GetHandle()->SetGraphicsRootDescriptorTable(2, textureView->GetGPUHandle());
 
     cmdList->PushConstants(ShaderStage::Vertex, 0, &time, 4, 0);
     cmdList->PushConstants(ShaderStage::Vertex, 1, &triangleAngle, 4, 0);

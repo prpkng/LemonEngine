@@ -1,4 +1,3 @@
-
 #include "DXDevice.h"
 
 #include "API/DXGraphicsPSODesc.h"
@@ -6,16 +5,21 @@
 #include "API/DXRootSignatureDesc.h"
 #include "API/Helpers.h"
 #include "Commands/DXCommandQueue.h"
+#include "Lemon/Renderer/RHI/Interfaces/ITexture.h"
 #include "Pipelines/DXPipeline.h"
 #include "Pipelines/DXShader.h"
 #include "Resources/DXBuffer.h"
 #include "Resources/DXSwapchain.h"
+#include "Resources/DXTexture.h"
+#include "d3d12.h"
 #include <codecvt>
+#include <memory>
 
+namespace Lemon::DX
+{
 
-namespace Lemon::DX {
-
-DXDevice::DXDevice(const Desc& desc) : IDevice() {
+DXDevice::DXDevice(const Desc& desc) : IDevice()
+{
     if (desc.enableDebugLayer) {
         ComPtr<ID3D12Debug> debugController;
         CHECK(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)), "Failed to get debug interface");
@@ -35,49 +39,50 @@ DXDevice::DXDevice(const Desc& desc) : IDevice() {
               "Failed to set break on severity for DX debug layer");
     }
 
-
-    // Create srv heap
-    m_SrvHeap = std::make_unique<DXDescriptorHeap>(
-        m_Handle, 
-        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 
-        128, //max textures + CBV (//TODO increase this later) 
-        true
-    );
+    // Create heaps
+    m_SrvHeap = std::make_unique<DXDescriptorHeap>(m_Handle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
+                                                   128, // max textures + CBV (//TODO increase this later)
+                                                   true);
+    m_RtvHeap = std::make_unique<DXDescriptorHeap>(m_Handle, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 64, false);
+    m_DsvHeap = std::make_unique<DXDescriptorHeap>(m_Handle, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 16, false);
 }
 
 DXDevice::~DXDevice() = default;
-std::shared_ptr<RHI::IBuffer> DXDevice::CreateBuffer(const RHI::IBuffer::Desc& desc) {
+std::shared_ptr<RHI::IBuffer> DXDevice::CreateBuffer(const RHI::IBuffer::Desc& desc)
+{
     return std::make_shared<DXBuffer>(shared_from_this(), desc);
 }
 
-std::shared_ptr<RHI::IVertexBuffer> DXDevice::CreateVertexBuffer(const RHI::IVertexBuffer::Desc& desc) {
+std::shared_ptr<RHI::IVertexBuffer> DXDevice::CreateVertexBuffer(const RHI::IVertexBuffer::Desc& desc)
+{
     return std::make_shared<DXVertexBuffer>(shared_from_this(), desc);
 }
 
-std::shared_ptr<RHI::IIndexBuffer> DXDevice::CreateIndexBuffer(const RHI::IIndexBuffer::Desc& desc) {
+std::shared_ptr<RHI::IIndexBuffer> DXDevice::CreateIndexBuffer(const RHI::IIndexBuffer::Desc& desc)
+{
     return std::make_shared<DXIndexBuffer>(shared_from_this(), desc);
 }
 
-
 std::wstring StringToWString(const std::string& str)
 {
-	std::wstring wstr;
-	size_t size;
-	wstr.resize(str.length());
-	mbstowcs_s(&size,&wstr[0],wstr.size()+1,str.c_str(),str.size());
-	return wstr;
+    std::wstring wstr;
+    size_t       size;
+    wstr.resize(str.length());
+    mbstowcs_s(&size, &wstr[0], wstr.size() + 1, str.c_str(), str.size());
+    return wstr;
 }
 
 std::string WStringToString(const std::wstring& wstr)
 {
-	std::string str;
-	size_t size;
-	str.resize(wstr.length());
-	wcstombs_s(&size, &str[0], str.size() + 1, wstr.c_str(), wstr.size());
-	return str;
+    std::string str;
+    size_t      size;
+    str.resize(wstr.length());
+    wcstombs_s(&size, &str[0], str.size() + 1, wstr.c_str(), wstr.size());
+    return str;
 }
 
-std::shared_ptr<RHI::IPipeline> DXDevice::CreatePipeline(const RHI::IPipeline::Desc& desc) {
+std::shared_ptr<RHI::IPipeline> DXDevice::CreatePipeline(const RHI::IPipeline::Desc& desc)
+{
     std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout;
     for (const auto& vertexAttribute : desc.inputLayout) {
         inputLayout.push_back(
@@ -115,10 +120,9 @@ std::shared_ptr<RHI::IPipeline> DXDevice::CreatePipeline(const RHI::IPipeline::D
                          Convert::ToAddressMode(staticSampler.addressU), Convert::ToAddressMode(staticSampler.addressV),
                          Convert::ToAddressMode(staticSampler.addressW));
         samplerDesc.ShaderVisibility = Convert::ToVisibility(staticSampler.visibility);
-        samplerDesc.RegisterSpace = staticSampler.space;
+        samplerDesc.RegisterSpace    = staticSampler.space;
         rootDesc.AddStaticSampler(samplerDesc);
     }
-
 
     DXShader vertexShader(StringToWString(desc.vertexShaderPath), RHI::ShaderStage::Vertex);
     DXShader pixelShader(StringToWString(desc.pixelShaderPath), RHI::ShaderStage::Pixel);
@@ -143,12 +147,86 @@ std::shared_ptr<RHI::IPipeline> DXDevice::CreatePipeline(const RHI::IPipeline::D
     return std::make_shared<DXPipeline>(DXPipelineStateObject::Create(m_Handle, rootDesc, psoDesc));
 }
 
-std::shared_ptr<RHI::ICommandQueue> DXDevice::CreateCommandQueue(RHI::QueueType type) {
+std::shared_ptr<RHI::ICommandQueue> DXDevice::CreateCommandQueue(RHI::QueueType type)
+{
     return std::make_shared<DXCommandQueue>(shared_from_this(), type);
 }
 
 std::shared_ptr<RHI::ISwapchain> DXDevice::CreateSwapchain(const std::shared_ptr<RHI::ICommandQueue>& cmdQueue,
-                                                           const RHI::ISwapchain::Desc&               desc) {
+                                                           const RHI::ISwapchain::Desc&               desc)
+{
     return std::make_shared<DXSwapchain>(shared_from_this(), std::dynamic_pointer_cast<DXCommandQueue>(cmdQueue), desc);
 }
+
+static D3D12_RESOURCE_FLAGS BuildResourceFlags(const RHI::ITexture::Desc& desc) noexcept
+{
+    D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;
+
+    if (desc.isRenderTarget)
+        flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    if (desc.isDepthStencil)
+        flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL |
+                 D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE; // remove this if you want to sample the depth later
+
+    if (desc.allowUnorderedAccess)
+        flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+    return flags;
+}
+
+std::shared_ptr<RHI::ITexture> DXDevice::CreateTexture(const RHI::ITexture::Desc& desc)
+{
+    // Build the D3D12 resource description
+    D3D12_RESOURCE_DESC textureDesc = {};
+    textureDesc.Dimension           = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    textureDesc.Alignment           = 0;
+    textureDesc.Width               = desc.width;
+    textureDesc.Height              = desc.height;
+    textureDesc.DepthOrArraySize    = static_cast<UINT16>(desc.arraySize);
+    textureDesc.MipLevels           = static_cast<UINT16>(desc.arraySize);
+    textureDesc.Format              = Convert::ToFormat(desc.format);
+    textureDesc.SampleDesc          = {1, 0};
+    textureDesc.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    textureDesc.Flags               = BuildResourceFlags(desc);
+
+    // Determine initial state and clear value
+    D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COPY_DEST;
+
+    std::optional<D3D12_CLEAR_VALUE> clearValue;
+
+    if (desc.isRenderTarget) {
+        initialState = D3D12_RESOURCE_STATE_RENDER_TARGET;
+        clearValue   = D3D12_CLEAR_VALUE{
+            .Format = Convert::ToFormat(desc.format),
+            .Color  = {0.0f, 0.0f, 0.0f, 1.0f},
+        };
+    } else if (desc.isDepthStencil) {
+        initialState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+        clearValue   = D3D12_CLEAR_VALUE{
+            .Format       = Convert::ToFormat(desc.format),
+            .DepthStencil = {1.0f, 0},
+        };
+    }
+
+    // Allocate GPU memory and create the resource
+    CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
+
+    ComPtr<ID3D12Resource> resource;
+    CHECK(GetHandle()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &textureDesc, initialState,
+                                               clearValue.has_value() ? &clearValue.value() : nullptr,
+                                               IID_PPV_ARGS(&resource)),
+          "Failed to create texture resource");
+
+    // Set debug name if available
+    if (!desc.debugName.empty()) {
+        std::wstring wideName(desc.debugName.begin(), desc.debugName.end());
+        resource->SetName(wideName.c_str());
+    }
+
+    /// Pass everything to DXTexture
+    return std::make_unique<DXTexture>(GetHandle(), std::move(resource), m_SrvHeap.get(), m_RtvHeap.get(),
+                                       m_DsvHeap.get(), desc);
+}
+
 } // namespace Lemon::DX

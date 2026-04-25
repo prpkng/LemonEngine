@@ -21,7 +21,8 @@ class DXDescriptorHeap {
 
         incrementSize_ = device->GetDescriptorHandleIncrementSize(type);
         cpuStart_ = heap_->GetCPUDescriptorHandleForHeapStart();
-        gpuStart_ = heap_->GetGPUDescriptorHandleForHeapStart();
+        if (shaderVisible)
+          gpuStart_ = heap_->GetGPUDescriptorHandleForHeapStart();
     }
 
     struct Allocation {

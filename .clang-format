@@ -13,6 +13,11 @@ AlignConsecutiveDeclarations:
     AcrossComments: true
     AcrossEmptyLines: false
     AlignFunctionDeclarations: true
+AlignConsecutiveAssignments: 
+    Enabled: true
+    AcrossComments: true
+    AcrossEmptyLines: false
+    AlignFunctionDeclarations: true
 # PackParameters: 
     # BinPack: OnePerLine
 AllowAllParametersOfDeclarationOnNextLine: false
@@ -21,3 +26,8 @@ AlignTrailingComments:
   OverEmptyLines: 2
 BinPackParameters: OnePerLine
 AlignConsecutiveMacros: AcrossComments
+EmptyLineAfterAccessModifier: Leave
+AccessModifierOffset: -4
+# EnumTrailingComma: Always
+BreakBeforeBraces: Linux
+BreakBeforeTernaryOperators : true

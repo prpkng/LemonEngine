@@ -31,21 +31,6 @@ add_library(Lemon SHARED
  "src/Lemon/LayerStack.h"
  "src/Lemon/Renderer/TestDXLayer.cpp"
  "src/Lemon/Renderer/TestDXLayer.h"
- "src/Lemon/Renderer/Backends/DX/DXDevice.cpp"
- "src/Lemon/Renderer/Backends/DX/DXDevice.h"
- "src/Lemon/Renderer/Backends/DX/Resources/DXBuffer.cpp"
- "src/Lemon/Renderer/Backends/DX/Resources/DXBuffer.h"
- "src/Lemon/Renderer/Backends/DX/Pipelines/DXShader.cpp"
- "src/Lemon/Renderer/Backends/DX/Pipelines/DXShader.h"
- "src/Lemon/Renderer/Backends/DX/API/Helpers.cpp"
- "src/Lemon/Renderer/Backends/DX/Pipelines/DXPipeline.h"
- "src/Lemon/Renderer/Backends/DX/API/Helpers.h"
- "src/Lemon/Renderer/Backends/DX/API/DXRootSignatureDesc.h"
- "src/Lemon/Renderer/Backends/DX/API/DXRootSignatureDesc.cpp"
- "src/Lemon/Renderer/Backends/DX/API/DXGraphicsPSODesc.cpp"
- "src/Lemon/Renderer/Backends/DX/API/DXGraphicsPSODesc.h"
- "src/Lemon/Renderer/Backends/DX/API/DXPSO.cpp"
-
  "src/Lemon/Renderer/RHI/Helpers/Builders.h"
  "src/Lemon/Renderer/RHI/Helpers/Builders.cpp"
  "src/Lemon/Renderer/RHI/Types/RHICommandTypes.h"
@@ -58,16 +43,35 @@ add_library(Lemon SHARED
  "src/Lemon/Renderer/RHI/Interfaces/IPipeline.h"
  "src/Lemon/Renderer/RHI/Interfaces/IShader.h"
  "src/Lemon/Renderer/RHI/Interfaces/IBuffer.h"
+ "src/Lemon/Renderer/RHI/Interfaces/ITexture.h"
  
+
+ "src/Lemon/Renderer/Backends/DX/API/Helpers.cpp"
+ "src/Lemon/Renderer/Backends/DX/API/Helpers.h"
+ "src/Lemon/Renderer/Backends/DX/API/DXRootSignatureDesc.h"
+ "src/Lemon/Renderer/Backends/DX/API/DXRootSignatureDesc.cpp"
+ "src/Lemon/Renderer/Backends/DX/API/DXGraphicsPSODesc.cpp"
+ "src/Lemon/Renderer/Backends/DX/API/DXGraphicsPSODesc.h"
+ "src/Lemon/Renderer/Backends/DX/API/DXPSO.cpp"
  "src/Lemon/Renderer/Backends/DX/API/DXPSO.h"
+
+ "src/Lemon/Renderer/Backends/DX/DXDevice.cpp"
+ "src/Lemon/Renderer/Backends/DX/DXDevice.h"
+ "src/Lemon/Renderer/Backends/DX/Resources/DXBuffer.cpp"
+ "src/Lemon/Renderer/Backends/DX/Resources/DXBuffer.h"
+ "src/Lemon/Renderer/Backends/DX/Resources/DXSwapchain.h"
+ "src/Lemon/Renderer/Backends/DX/Resources/DXSwapchain.cpp"
+ "src/Lemon/Renderer/Backends/DX/Resources/DXTexture.cpp"
+ "src/Lemon/Renderer/Backends/DX/Resources/DXTexture.h"
+ "src/Lemon/Renderer/Backends/DX/Pipelines/DXShader.cpp"
+ "src/Lemon/Renderer/Backends/DX/Pipelines/DXShader.h"
+ "src/Lemon/Renderer/Backends/DX/Pipelines/DXPipeline.h"
  "src/Lemon/Renderer/Backends/DX/Commands/DXCommandQueue.h"
  "src/Lemon/Renderer/Backends/DX/Commands/DXCommandQueue.cpp"
  "src/Lemon/Renderer/Backends/DX/Commands/DXCommandList.cpp"
  "src/Lemon/Renderer/Backends/DX/Commands/DXCommandList.h"
- "src/Lemon/Renderer/Backends/DX/Resources/DXSwapchain.h"
- "src/Lemon/Renderer/Backends/DX/Resources/DXSwapchain.cpp"
- src/Lemon/Renderer/stb_image.h
-)
+ "src/Lemon/Renderer/stb_image.h"
+ )
 
 target_compile_features(Lemon PUBLIC cxx_std_23)
 target_include_directories(Lemon PUBLIC src/)
