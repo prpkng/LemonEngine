@@ -7,6 +7,7 @@
 #include "IBuffer.h"
 #include "ICommandQueue.h"
 #include "ISwapchain.h"
+#include "IUploadContext.h"
 #include "Lemon/Renderer/RHI/Interfaces/ITexture.h"
 
 namespace Lemon::RHI
@@ -36,6 +37,8 @@ namespace Lemon::RHI
 
         [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTexture(const ITexture::Desc& desc) = 0;
 
+        [[nodiscard]] virtual std::shared_ptr<IUploadContext> CreateUploadContext() = 0;
+
         // Helper methods
         [[nodiscard]] virtual std::shared_ptr<IIndexBuffer> CreateIndexBuffer(const IBuffer::Desc& bufferDesc, ElementType indexType) {
             IIndexBuffer::Desc indexDesc = {
@@ -53,6 +56,8 @@ namespace Lemon::RHI
             return CreateVertexBuffer(vertexDesc);
         };
 
+        [[nodiscard]] virtual std::shared_ptr<ICommandQueue> GetCopyQueue() = 0;
+        [[nodiscard]] virtual std::shared_ptr<ICommandQueue> GetGraphicsQueue() = 0;
     private:
     };
 }

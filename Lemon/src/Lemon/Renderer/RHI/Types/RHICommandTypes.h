@@ -19,14 +19,15 @@ struct Viewport {
 };
 
 struct ScissorRect {
-    int32_t left, top, right, bottom;
+    i32 left, top, right, bottom;
 };
 
 // Resource state for barrier abstraction
 // DX12: D3D12_RESOURCE_STATE | Vulkan: VkImageLayout + VkAccessFlags
-enum class ResourceState : uint32_t {
+enum class ResourceState : u32 {
     Present,
     RenderTarget,
+    Common,
     DepthWrite,
     DepthRead,
     VertexShaderResource,
@@ -34,6 +35,7 @@ enum class ResourceState : uint32_t {
     ShaderResource,
     CopySource,
     CopyDest,
+    VertexAndConstantBuffer
 };
 
 } // namespace Lemon::RHI

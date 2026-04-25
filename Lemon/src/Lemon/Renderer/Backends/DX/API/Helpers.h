@@ -4,7 +4,6 @@
 #include <Lemon/Renderer/RHI/Types/RHITypes.h>
 #include <dxgi.h>
 
-
 #include <wrl/client.h>
 
 #include "Lemon/Renderer/RHI/Types/RHICommandTypes.h"
@@ -29,10 +28,12 @@ DXGI_FORMAT TranslateElementTypeToFormat(Lemon::RHI::ElementType type);
 // Translation helpers - RHI -> DirectX 12
 // ===============================================
 
-namespace Lemon::DX::Convert {
+namespace Lemon::DX::Convert
+{
 using namespace RHI;
 
-[[nodiscard]] constexpr D3D12_SHADER_VISIBILITY ToVisibility(ShaderStage s) noexcept {
+[[nodiscard]] constexpr D3D12_SHADER_VISIBILITY ToVisibility(ShaderStage s) noexcept
+{
     switch (s) {
     case ShaderStage::Vertex:
         return D3D12_SHADER_VISIBILITY_VERTEX;
@@ -43,7 +44,8 @@ using namespace RHI;
     }
 }
 
-[[nodiscard]] constexpr D3D12_PRIMITIVE_TOPOLOGY_TYPE ToTopologyType(const PrimitiveTopology t) noexcept {
+[[nodiscard]] constexpr D3D12_PRIMITIVE_TOPOLOGY_TYPE ToTopologyType(const PrimitiveTopology t) noexcept
+{
     switch (t) {
     case PrimitiveTopology::TriangleList:
     case PrimitiveTopology::TriangleFan:
@@ -58,7 +60,8 @@ using namespace RHI;
         return D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
     }
 }
-[[nodiscard]] constexpr D3D_PRIMITIVE_TOPOLOGY ToTopology(const PrimitiveTopology t) noexcept {
+[[nodiscard]] constexpr D3D_PRIMITIVE_TOPOLOGY ToTopology(const PrimitiveTopology t) noexcept
+{
     switch (t) {
     case PrimitiveTopology::TriangleList:
         return D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -77,20 +80,21 @@ using namespace RHI;
     }
 }
 
-[[nodiscard]] constexpr D3D12_CULL_MODE ToCullMode(const CullMode m) noexcept {
+[[nodiscard]] constexpr D3D12_CULL_MODE ToCullMode(const CullMode m) noexcept
+{
     switch (m) {
     case CullMode::None:
         return D3D12_CULL_MODE_NONE;
     case CullMode::Front:
         return D3D12_CULL_MODE_FRONT;
     case CullMode::Back:
-        return D3D12_CULL_MODE_BACK;
     default:
         return D3D12_CULL_MODE_BACK;
     }
 }
 
-[[nodiscard]] constexpr D3D12_HEAP_TYPE ToHeapType(MemoryUsage usage) {
+[[nodiscard]] constexpr D3D12_HEAP_TYPE ToHeapType(MemoryUsage usage)
+{
     switch (usage) {
     case MemoryUsage::GPU_ONLY:
         return D3D12_HEAP_TYPE_DEFAULT;
@@ -102,7 +106,8 @@ using namespace RHI;
     return D3D12_HEAP_TYPE_DEFAULT;
 }
 
-[[nodiscard]] constexpr D3D12_RESOURCE_STATES ToResourceState(MemoryUsage usage) {
+[[nodiscard]] constexpr D3D12_RESOURCE_STATES ToResourceState(MemoryUsage usage)
+{
     switch (usage) {
     case MemoryUsage::GPU_ONLY:
         return D3D12_RESOURCE_STATE_COMMON;
@@ -114,7 +119,8 @@ using namespace RHI;
     return D3D12_RESOURCE_STATE_COMMON;
 }
 
-[[nodiscard]] constexpr DXGI_FORMAT ToFormat(const Format f) noexcept {
+[[nodiscard]] constexpr DXGI_FORMAT ToFormat(const Format f) noexcept
+{
     switch (f) {
     case Format::RGBA8_UNORM:
         return DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -131,7 +137,8 @@ using namespace RHI;
     }
 }
 
-[[nodiscard]] constexpr DXGI_FORMAT ToFormat(const ElementType type) noexcept {
+[[nodiscard]] constexpr DXGI_FORMAT ToFormat(const ElementType type) noexcept
+{
     switch (type) {
     case ElementType::Float:
         return DXGI_FORMAT_R32_FLOAT;
@@ -182,11 +189,13 @@ using namespace RHI;
     }
 }
 
-[[nodiscard]] constexpr DXGI_FORMAT ToVertexFormat(const Format f) noexcept {
+[[nodiscard]] constexpr DXGI_FORMAT ToVertexFormat(const Format f) noexcept
+{
     return ToFormat(f); // reuse — same enum, different semantic use
 }
 
-[[nodiscard]] constexpr D3D12_COMMAND_LIST_TYPE ToCommandListType(const QueueType t) noexcept {
+[[nodiscard]] constexpr D3D12_COMMAND_LIST_TYPE ToCommandListType(const QueueType t) noexcept
+{
     switch (t) {
     case QueueType::Graphics:
         return D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -199,7 +208,8 @@ using namespace RHI;
     }
 }
 
-[[nodiscard]] constexpr D3D12_FILTER ToFilter(const Filter f) noexcept {
+[[nodiscard]] constexpr D3D12_FILTER ToFilter(const Filter f) noexcept
+{
     switch (f) {
     case Filter::Linear:
         return D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -210,7 +220,8 @@ using namespace RHI;
     }
 }
 
-[[nodiscard]] constexpr D3D12_TEXTURE_ADDRESS_MODE ToAddressMode(const AddressMode m) noexcept {
+[[nodiscard]] constexpr D3D12_TEXTURE_ADDRESS_MODE ToAddressMode(const AddressMode m) noexcept
+{
     switch (m) {
     case AddressMode::Wrap:
         return D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -225,7 +236,8 @@ using namespace RHI;
     }
 }
 
-[[nodiscard]] constexpr D3D12_RESOURCE_STATES ToResourceState(const ResourceState state) noexcept {
+[[nodiscard]] constexpr D3D12_RESOURCE_STATES ToResourceState(const ResourceState state) noexcept
+{
     switch (state) {
     case ResourceState::Present:
         return D3D12_RESOURCE_STATE_PRESENT;
@@ -235,9 +247,12 @@ using namespace RHI;
         return D3D12_RESOURCE_STATE_DEPTH_WRITE;
     case ResourceState::DepthRead:
         return D3D12_RESOURCE_STATE_DEPTH_READ;
-    case ResourceState::ShaderResource:
-        return D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+    case ResourceState::Common:
+        return D3D12_RESOURCE_STATE_COMMON;
+    case ResourceState::VertexAndConstantBuffer:
+        return D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
     case ResourceState::VertexShaderResource:
+    case ResourceState::ShaderResource:
         return D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
     case ResourceState::PixelShaderResource:
         return D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
@@ -250,7 +265,8 @@ using namespace RHI;
     }
 }
 
-[[nodiscard]] constexpr D3D12_BLEND ToBlendType(const BlendType t) noexcept {
+[[nodiscard]] constexpr D3D12_BLEND ToBlendType(const BlendType t) noexcept
+{
     switch (t) {
     case BlendType::Zero:
         return D3D12_BLEND_ZERO;
@@ -273,7 +289,8 @@ using namespace RHI;
     }
 }
 
-[[nodiscard]] constexpr D3D12_BLEND_OP ToBlendOp(const BlendOp op) noexcept {
+[[nodiscard]] constexpr D3D12_BLEND_OP ToBlendOp(const BlendOp op) noexcept
+{
     switch (op) {
     case BlendOp::Add:
         return D3D12_BLEND_OP_ADD;
@@ -290,4 +307,4 @@ using namespace RHI;
     }
 }
 
-} // namespace Lemon::DX::Convert   
+} // namespace Lemon::DX::Convert

@@ -6,11 +6,13 @@
 #include "API/Helpers.h"
 #include "Commands/DXCommandQueue.h"
 #include "Lemon/Renderer/RHI/Interfaces/ITexture.h"
+#include "Lemon/Renderer/RHI/Types/RHICommandTypes.h"
 #include "Pipelines/DXPipeline.h"
 #include "Pipelines/DXShader.h"
 #include "Resources/DXBuffer.h"
 #include "Resources/DXSwapchain.h"
 #include "Resources/DXTexture.h"
+#include "Resources/DXUploadContext.h"
 #include "d3d12.h"
 #include <codecvt>
 #include <memory>
@@ -228,5 +230,26 @@ std::shared_ptr<RHI::ITexture> DXDevice::CreateTexture(const RHI::ITexture::Desc
     return std::make_unique<DXTexture>(GetHandle(), std::move(resource), m_SrvHeap.get(), m_RtvHeap.get(),
                                        m_DsvHeap.get(), desc);
 }
+
+std::shared_ptr<RHI::IUploadContext> DXDevice::CreateUploadContext() {
+    auto copyQueue = GetGraphicsQueue();
+    return std::make_unique<DXUploadContext>(m_Handle, copyQueue);
+}
+
+
+std::shared_ptr<RHI::ICommandQueue> DXDevice::GetCopyQueue() {
+    if (m_DefaultCopyQueue != nullptr) return m_DefaultCopyQueue;
+
+    m_DefaultCopyQueue = CreateCommandQueue(RHI::QueueType::Copy);
+    return m_DefaultCopyQueue;
+}
+
+std::shared_ptr<RHI::ICommandQueue> DXDevice::GetGraphicsQueue() {
+    if (m_DefaultGraphicsQueue != nullptr) return m_DefaultGraphicsQueue;
+
+    m_DefaultGraphicsQueue = CreateCommandQueue(RHI::QueueType::Graphics);
+    return m_DefaultGraphicsQueue;
+}
+
 
 } // namespace Lemon::DX

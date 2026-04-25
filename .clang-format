@@ -25,6 +25,7 @@ AlignTrailingComments:
   Kind: Always
   OverEmptyLines: 2
 BinPackParameters: OnePerLine
+BinPackArguments: true
 AlignConsecutiveMacros: AcrossComments
 EmptyLineAfterAccessModifier: Leave
 AccessModifierOffset: -4
