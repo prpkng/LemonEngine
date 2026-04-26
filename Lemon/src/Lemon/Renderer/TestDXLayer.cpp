@@ -22,6 +22,7 @@
 #include <cmath>
 #include <memory>
 #include <numbers>
+#include <span>
 
 #include "Backends/DX/API/Helpers.h"
 #include "Backends/DX/Commands/DXCommandList.h"
@@ -213,10 +214,10 @@ void TestDXLayer::OnUpdate()
     cmdList->SetPrimitiveTopology(PrimitiveTopology::TriangleFan);
     cmdList->BindPipeline(pipeline);
 
-    cmdList->SetShaderTexture(2, textureView.get());
+    cmdList->BindTexture(2, textureView.get());
 
-    cmdList->PushConstants(ShaderStage::Vertex, 0, &time, 4, 0);
-    cmdList->PushConstants(ShaderStage::Vertex, 1, &triangleAngle, 4, 0);
+    cmdList->PushConstants(ShaderStage::Vertex, 0, std::as_bytes(std::span{&time, 1}), 0);
+    cmdList->PushConstants(ShaderStage::Vertex, 1, std::as_bytes(std::span{&triangleAngle, 1}), 0);
     cmdList->BindVertexBuffer(vertexBuffer);
     cmdList->BindIndexBuffer(indexBuffer);
     cmdList->DrawIndexed(SIDE_COUNT + 2, 1, 0, 0, 0);

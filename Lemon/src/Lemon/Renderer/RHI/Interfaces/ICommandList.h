@@ -56,7 +56,7 @@ struct ICommandList {
 
     // === TEXTURES ===
 
-    virtual void SetShaderTexture(u32 slot, const ITextureView* view)                = 0;
+    virtual void BindTexture(u32 slot, const ITextureView* view)                = 0;
     virtual void SetRenderTargets(std::vector<const ITextureView*> renderTargetViews,
                                   const ITextureView*              depthStencilView) = 0;
 
@@ -79,7 +79,7 @@ struct ICommandList {
     ///
     /// \code maps to SetGraphicsRoot32BitConstants | vkCmdPushConstants \endcode
     virtual void
-    PushConstants(ShaderStage stage, u32 slot, const void* data, size_t dataSize, u32 offsetIn32BitWords) = 0;
+    PushConstants(ShaderStage stage, u32 slot, std::span<const std::byte> data, u32 offsetIn32BitWords) = 0;
 
     // === BARRIERS ===
 

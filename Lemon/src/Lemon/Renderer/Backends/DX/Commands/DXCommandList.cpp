@@ -81,17 +81,16 @@ void DXCommandList::DrawIndexed(const u32 indexCount,
 
 void DXCommandList::PushConstants(RHI::ShaderStage stage,
                                   const u32        slot,
-                                  const void*      data,
-                                  size_t           dataSize,
+                                  std::span<const std::byte> data,
                                   u32              offsetIn32BitWords)
 {
     AssertRecording();
 
     // data.size() must be a multiple of 4 (32-bit words)
-    LM_CORE_ASSERT(dataSize % 4 == 0, "Push constant data must be 32-bit aligned");
-    const u32 num32BitValues = static_cast<u32>(dataSize / 4);
+    LM_CORE_ASSERT(data.size_bytes() % 4 == 0, "Push constant data must be 32-bit aligned");
+    const u32 num32BitValues = static_cast<u32>(data.size_bytes() / 4);
 
-    m_CmdList->SetGraphicsRoot32BitConstants(slot, num32BitValues, data, offsetIn32BitWords);
+    m_CmdList->SetGraphicsRoot32BitConstants(slot, num32BitValues, data.data(), offsetIn32BitWords);
 }
 void DXCommandList::SetPrimitiveTopology(RHI::PrimitiveTopology topology)
 {
@@ -168,7 +167,7 @@ void DXCommandList::SetScissor(const RHI::ScissorRect& scissor)
     D3D12_RECT scissorRect{scissor.left, scissor.top, scissor.right, scissor.bottom};
     m_CmdList->RSSetScissorRects(1, &scissorRect);
 }
-void DXCommandList::SetShaderTexture(u32 slot, const ITextureView* view)
+void DXCommandList::BindTexture(u32 slot, const ITextureView* view)
 {
     AssertRecording();
 

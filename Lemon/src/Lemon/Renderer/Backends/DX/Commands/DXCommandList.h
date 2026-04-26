@@ -26,7 +26,7 @@ public:
     void Draw(u32 vertexCount, u32 instanceCount, u32 firstVertex, u32 firstInstance) override;
     void DrawIndexed(u32 indexCount, u32 instanceCount, u32 firstIndex, i32 vertexOffset, u32 firstInstance) override;
 
-    void PushConstants(ShaderStage stage, u32 slot, const void* data, size_t dataSize, u32 offsetIn32BitWords) override;
+    void PushConstants(ShaderStage stage, u32 slot, std::span<const std::byte> data, u32 offsetIn32BitWords) override;
 
     void SetPrimitiveTopology(PrimitiveTopology topology) override;
 
@@ -39,7 +39,7 @@ public:
     void SetViewport(const Viewport& viewport) override;
     void SetScissor(const ScissorRect& scissor) override;
 
-    void SetShaderTexture(u32 slot, const ITextureView* view) override;
+    void BindTexture(u32 slot, const ITextureView* view) override;
 
     void SetRenderTargets(std::vector<const ITextureView*> renderTargetViews,
                           const ITextureView*              depthStencilView) override;
