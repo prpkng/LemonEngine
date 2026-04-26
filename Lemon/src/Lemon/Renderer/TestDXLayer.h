@@ -57,4 +57,6 @@ private:
 
     std::shared_ptr<Lemon::DX::DXTexture>     texture;
     std::shared_ptr<Lemon::DX::DXTextureView> textureView;
+    std::shared_ptr<Lemon::DX::DXTexture>     depthTexture;
+    std::shared_ptr<Lemon::DX::DXTextureView>     depthTextureView;
 };

@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <Lemon/Renderer/RHI/Interfaces/IShader.h>
 #include "Helpers.h"
+#include "d3d12.h"
 
 namespace Lemon::DX
 {
@@ -79,6 +80,7 @@ namespace Lemon::DX
     {
         m_Handle.DepthStencilState.DepthEnable = desc.depthEnable;
         m_Handle.DepthStencilState.DepthWriteMask = desc.depthWrite ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
+        m_Handle.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
         m_Handle.DepthStencilState.StencilEnable = desc.stencilEnable;
         return *this;
     }

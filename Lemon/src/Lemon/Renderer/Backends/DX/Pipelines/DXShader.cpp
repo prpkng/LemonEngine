@@ -25,9 +25,9 @@ namespace Lemon::DX
         switch (type)
         {
         case RHI::ShaderStage::Vertex:
-            return "vs_5_0";
+            return "vs_5_1";
         case RHI::ShaderStage::Pixel:
-            return "ps_5_0";
+            return "ps_5_1";
         default:
             LM_CORE_FATAL("Shader type unimplemented: {0}", magic_enum::enum_name(type));
             return "";
