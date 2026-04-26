@@ -42,7 +42,7 @@ namespace Lemon::DX
     DXGraphicsPSODesc& DXGraphicsPSODesc::SetRenderTargetFormat(const DXGI_FORMAT fmt, const UINT slot)
     {
         m_Handle.RTVFormats[slot] = fmt;
-        m_Handle.NumRenderTargets = max(m_Handle.NumRenderTargets, slot + 1);
+        m_Handle.NumRenderTargets = std::max(m_Handle.NumRenderTargets, slot + 1);
         return *this;
     }
 

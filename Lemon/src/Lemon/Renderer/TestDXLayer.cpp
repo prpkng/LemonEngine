@@ -24,10 +24,17 @@
 #include <numbers>
 #include <span>
 
+
 #include "Backends/DX/API/Helpers.h"
 #include "Backends/DX/Commands/DXCommandList.h"
 #include "Backends/DX/Pipelines/DXPipeline.h"
 #include "SDL3/SDL_timer.h"
+
+#define LINALG_FORWARD_COMPATIBLE
+#include <linalg.h>
+
+using namespace linalg::aliases;
+
 
 // #include <DescriptorHeap.h>
 // #include <DirectXHelpers.h>
@@ -37,9 +44,9 @@ using namespace Lemon::RHI;
 using namespace Lemon::DX;
 
 struct Vertex {
-    float position[2];
-    float color[3];
-    float uv[2];
+    float2 position;
+    float3 color;
+    float2 uv;
 
     [[nodiscard]] std::string ToString() const
     {
@@ -94,9 +101,9 @@ void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice)
 
     std::vector<Vertex> vertices = {};
     vertices.push_back({
-        {0.0f, 0.0f},
-        {0.25f, 0.25f, 0.25f},
-        {0.5f, 0.5f}
+        float2(0.0f, 0.0f),
+        float3(0.25f, 0.25f, 0.25f),
+        float2(0.5f, 0.5f)
     });
     std::vector<uint16_t> indices = {0};
     const float           incr    = 2 * std::numbers::pi_v<float> / SIDE_COUNT;
@@ -127,7 +134,7 @@ void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice)
 
     // std::vector<u16> indices = {0, 1, 2, 1, 3, 2};
 
-    IBuffer::Desc vertexDesc(BufferUsage::Vertex, MemoryUsage::CPU_TO_GPU, vertices);
+    IBuffer::Desc vertexDesc(BufferUsage::Vertex, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(vertices)));
 
     auto layout = VertexLayoutBuilder()
                       .WithElement("POSITION", ElementType::Float2)
@@ -137,7 +144,7 @@ void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice)
 
     vertexBuffer = std::dynamic_pointer_cast<DXVertexBuffer>(dxDevice->CreateVertexBuffer(vertexDesc, layout));
 
-    IBuffer::Desc indexDesc(BufferUsage::Index, MemoryUsage::CPU_TO_GPU, indices);
+    IBuffer::Desc indexDesc(BufferUsage::Index, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(indices)));
 
     indexBuffer = std::dynamic_pointer_cast<DXIndexBuffer>(dxDevice->CreateIndexBuffer(indexDesc, ElementType::Ushort));
 }

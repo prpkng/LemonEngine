@@ -1,5 +1,6 @@
 #pragma once
 #include "Lemon/Renderer/RHI/Types/RHITypes.h"
+#include <span>
 
 namespace Lemon::RHI
 {
@@ -16,9 +17,11 @@ namespace Lemon::RHI
             
             Desc() {}
 
-            template <typename T>
-            Desc(BufferUsage usage, MemoryUsage memoryUsage, const std::vector<T>& initialData, bool allowResize = false) :
-                usage(usage), memoryUsage(memoryUsage), size(initialData.size() * sizeof(T)), initialData(initialData.data()), allowResize(allowResize) {}
+            // template <typename T>
+            // Desc(BufferUsage usage, MemoryUsage memoryUsage, const std::vector<T>& initialData, bool allowResize = false) :
+            //     usage(usage), memoryUsage(memoryUsage), size(initialData.size() * sizeof(T)), initialData(initialData.data()), allowResize(allowResize) {}
+            Desc(BufferUsage usage, MemoryUsage memoryUsage, std::span<const std::byte> initialData, bool allowResize = false) :
+                usage(usage), memoryUsage(memoryUsage), size(initialData.size_bytes()), initialData(initialData.data()), allowResize(allowResize) {}
 
             Desc(BufferUsage usage, MemoryUsage memoryUsage, size_t size, const void* initialData = nullptr, bool allowResize = false) :
                 usage(usage), memoryUsage(memoryUsage), size(size), initialData(initialData), allowResize(allowResize) {}

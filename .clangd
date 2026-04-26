@@ -1,4 +1,7 @@
 Documentation:
   CommentFormat: Doxygen
+PathMatch:
+  - Lemon/src/.*\.(cpp|h)
+  - Sandbox/src/.*\.(cpp|h)
 CompileFlags:
   Add: [-std=c++23]

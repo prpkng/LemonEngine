@@ -18,6 +18,7 @@
 #include "Lemon/Log.h"
 
 #ifdef LM_PLATFORM_WINDOWS
+    #define NOMINMAX
 	#include <Windows.h>
     #include <d3d12.h>
     #include <dxgi.h>
