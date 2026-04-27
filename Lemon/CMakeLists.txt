@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
+project(Lemon)
+
 SET (CMAKE_COLOR_DIAGNOSTICS ON)
 set (CMAKE_CXX_STANDARD 23)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -8,6 +10,9 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/SDL)
 add_subdirectory(vendor/magic_enum)
+
+add_subdirectory(vendor/assimp)
+
 # add_subdirectory(vendor/DirectXTK12)
 
 add_library(Lemon SHARED
@@ -92,6 +97,7 @@ target_link_libraries(Lemon PUBLIC
         SDL3::SDL3     # For window handling
         spdlog::spdlog # For logging
         magic_enum::magic_enum
+        assimp
         d3d12          # DirectX 12
         dxgi           # DirectX Graphics Infrastructure
         dxguid         # DirectX Graphics Infrastructure
@@ -100,11 +106,16 @@ target_link_libraries(Lemon PUBLIC
 )
 
 
-add_custom_command(TARGET Lemon POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/Lemon.dll ${CMAKE_BINARY_DIR}/Sandbox
-        COMMAND_EXPAND_LISTS
+if(${WIN32})
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy -t $<TARGET_FILE_DIR:${PROJECT_NAME}> $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}>
+  COMMAND_EXPAND_LISTS
 )
-add_custom_command(
-    TARGET Lemon POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/assets" "${CMAKE_BINARY_DIR}/Sandbox/assets"
+endif()
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy -t
+        ${CMAKE_BINARY_DIR}/Sandbox/
+        $<TARGET_FILE:${PROJECT_NAME}>
+    COMMAND_EXPAND_LISTS
 )

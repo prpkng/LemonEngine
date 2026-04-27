@@ -10,3 +10,6 @@
 [submodule "Lemon/vendor/DirectXTK12"]
 	path = Lemon/vendor/DirectXTK12
 	url = https://github.com/microsoft/DirectXTK12.git
+[submodule "Lemon/vendor/assimp"]
+	path = Lemon/vendor/assimp
+	url = https://github.com/assimp/assimp.git
