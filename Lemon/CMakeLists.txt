@@ -79,10 +79,26 @@ add_library(Lemon SHARED
  "src/Lemon/Renderer/Backends/DX/Commands/DXCommandList.cpp"
  "src/Lemon/Renderer/Backends/DX/Commands/DXCommandList.h"
  src/Lemon/Renderer/RHI/Interfaces/IDevice.cpp
+
+    vendor/imgui/imgui/imconfig.h
+    vendor/imgui/imgui/imgui.h
+    vendor/imgui/imgui/imgui.cpp
+    vendor/imgui/imgui/imgui_demo.cpp
+    vendor/imgui/imgui/imgui_draw.cpp
+    vendor/imgui/imgui/imgui_internal.h
+    vendor/imgui/imgui/imgui_tables.cpp
+    vendor/imgui/imgui/imgui_widgets.cpp
+    vendor/imgui/imgui/imstb_rectpack.h
+    vendor/imgui/imgui/imstb_textedit.h
+    vendor/imgui/imgui/imstb_truetype.h
+    vendor/imgui/imgui/backends/imgui_impl_dx12.h
+    vendor/imgui/imgui/backends/imgui_impl_dx12.cpp
+    vendor/imgui/imgui/backends/imgui_impl_sdl3.h
+    vendor/imgui/imgui/backends/imgui_impl_sdl3.cpp
  )
 
 target_compile_features(Lemon PUBLIC cxx_std_23)
-target_include_directories(Lemon PUBLIC src/ vendor/dx-headers vendor/include)
+target_include_directories(Lemon PUBLIC src/ vendor/dx-headers vendor/include vendor/imgui/imgui)
 
 target_precompile_headers(Lemon PRIVATE src/lmpch.h)
 

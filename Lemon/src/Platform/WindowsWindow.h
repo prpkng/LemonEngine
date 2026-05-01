@@ -1,9 +1,9 @@
 #pragma once
 
-#include "lmpch.h"
 #include "Lemon/Window.h"
+#include "SDL3/SDL_events.h"
 
-class SDL_Window;
+struct SDL_Window;
 
 namespace Lemon {
 

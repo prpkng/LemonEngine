@@ -38,6 +38,8 @@ class DXDescriptorHeap {
         return {{cpuStart_.ptr + i * incrementSize_}, {gpuStart_.ptr + i * incrementSize_}, i};
     }
 
+    // TODO free allocations
+
     [[nodiscard]] ID3D12DescriptorHeap* GetHeap() const { return heap_.Get(); }
 
   private:

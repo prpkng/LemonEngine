@@ -13,3 +13,6 @@
 [submodule "Lemon/vendor/assimp"]
 	path = Lemon/vendor/assimp
 	url = https://github.com/assimp/assimp.git
+[submodule "Lemon/vendor/imgui/imgui"]
+	path = Lemon/vendor/imgui/imgui
+	url = https://github.com/ocornut/imgui.git

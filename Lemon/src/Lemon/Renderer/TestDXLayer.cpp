@@ -1,4 +1,6 @@
 #include <cstddef>
+#include <dxgi1_3.h>
+#include <dxgidebug.h>
 #include <lmpch.h>
 
 #include "TestDXLayer.h"
@@ -7,6 +9,9 @@
 #include <d3dx12.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
+
+#include <backends/imgui_impl_dx12.h>
+#include <backends/imgui_impl_sdl3.h>
 
 #include "Backends/DX/API/Helpers.h"
 #include "Backends/DX/Commands/DXCommandQueue.h"
@@ -30,11 +35,12 @@
 #include "Backends/DX/Commands/DXCommandList.h"
 #include "Backends/DX/Pipelines/DXPipeline.h"
 #include "SDL3/SDL_timer.h"
+#include "dxgiformat.h"
+#include "imgui.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-
 
 #define LINALG_FORWARD_COMPATIBLE
 #include <linalg.h>
@@ -79,7 +85,6 @@ void TestDXLayer::CreateTexture(const std::shared_ptr<DXDevice>&       device,
 void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device)
 {
 
-    
     IPipeline::Desc desc{};
     desc.vertexShaderPath       = "assets/shader.hlsl";
     desc.pixelShaderPath        = "assets/shader.hlsl";
@@ -108,7 +113,7 @@ static size_t indexCount = 0;
 void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice)
 {
     LM_INFO("Loading mesh");
-    auto mesh = loadFirstMesh("assets/monkey.fbx");
+    auto mesh  = loadFirstMesh("assets/monkey.fbx");
     indexCount = mesh.indices.size();
 
     // std::vector<Vertex> vertices = {
@@ -216,6 +221,47 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
     texture = std::dynamic_pointer_cast<DXTexture>(device->LoadTexture("assets/test.png"));
 
     textureView = std::unique_ptr<DXTextureView>(dynamic_cast<DXTextureView*>(texture->CreateSRV().release()));
+
+    IMGUI_CHECKVERSION();
+
+    ImGui::CreateContext();
+    [[maybe_unused]] ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+    ImGui_ImplSDL3_InitForD3D(window->m_Handle);
+
+    ImGui_ImplDX12_InitInfo initInfo = {};
+    initInfo.Device                  = device->m_Handle.Get();
+    initInfo.CommandQueue            = graphicsQueue->GetHandle().Get();
+    initInfo.NumFramesInFlight       = MAX_FRAMES_IN_FLIGHT;
+    initInfo.RTVFormat               = DXGI_FORMAT_R8G8B8A8_UNORM;
+    initInfo.DSVFormat               = DXGI_FORMAT_UNKNOWN;
+    initInfo.UserData = device.get();
+    // Allocating srv descriptors (for textures) is up to the application
+    // (curent version of the imgui backend will only allocate one descriptor)
+
+
+    auto allocation = device->m_SrvHeap->Allocate();
+
+    initInfo.SrvDescriptorHeap    = device->m_SrvHeap->GetHeap();
+    initInfo.LegacySingleSrvCpuDescriptor = allocation.cpu;
+    initInfo.LegacySingleSrvGpuDescriptor = allocation.gpu;
+    // initInfo.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo* info, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle,
+    //                                    D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle) {
+    //     auto dx = reinterpret_cast<DXDevice*>(info->UserData);
+    //     auto allocation = dx->m_SrvHeap->Allocate();
+    //     out_cpu_handle = &allocation.cpu;
+    //     out_gpu_handle = &allocation.gpu;
+    // };
+    // initInfo.SrvDescriptorFreeFn = [](ImGui_ImplDX12_InitInfo* info, D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle,
+    //                                   D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle) {
+    //     // return g_pd3dSrvDescHeapAlloc.Free(cpu_handle, gpu_handle);
+    // };
+
+    ImGui_ImplDX12_Init(&initInfo);
+
+    ImGui::StyleColorsDark();
 }
 
 float4 from_euler(float pitch, float yaw, float roll)
@@ -228,7 +274,11 @@ float4 from_euler(float pitch, float yaw, float roll)
     return linalg::qmul(qy, linalg::qmul(qx, qz));
 }
 
-TestDXLayer::~TestDXLayer() = default;
+TestDXLayer::~TestDXLayer() {
+    ImGui_ImplDX12_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
+}
 
 void TestDXLayer::OnUpdate()
 {
@@ -249,6 +299,20 @@ void TestDXLayer::OnUpdate()
         rot.x -= deltaMouse.x / 10.0f * (PI / 180.0f);
         rot.y += deltaMouse.y / 10.0f * (PI / 180.0f);
     }
+
+    // == IMGUI ==
+
+    ImGui_ImplDX12_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
+
+    ImGui::ShowDemoWindow();
+
+    ImGui::Render();
+
+
+    // ===========
+
 
     // --- Throttle: wait on the OLDEST frame slot before reusing it ---
     // On frames 0 and 1 this value is 0, so CpuWaitForValue returns
@@ -277,7 +341,7 @@ void TestDXLayer::OnUpdate()
     cmdList->SetScissor({0, 0, LONG_MAX, LONG_MAX});
 
     cmdList->SetRenderTargets({swapchain->GetBackbufferView(backBufferIndex)}, depthTextureView.get());
-
+ 
     cmdList->SetPrimitiveTopology(PrimitiveTopology::TriangleList);
     cmdList->BindPipeline(pipeline);
 
@@ -300,10 +364,12 @@ void TestDXLayer::OnUpdate()
     cmdList->PushConstants(ShaderStage::Vertex, 2, std::as_bytes(std::span(&triangleAngle, 1)), 0);
     cmdList->BindVertexBuffer(vertexBuffer);
     cmdList->BindIndexBuffer(indexBuffer);
-    
+
     cmdList->DrawIndexed(indexCount, 1, 0, 0, 0);
 
 
+    ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), static_cast<DXCommandList*>(cmdList.get())->GetHandle());
+    
     // Transition the backBuffer to the present state
     cmdList->TransitionTexture(swapchain->GetBackbuffer(backBufferIndex).get(), ResourceState::Present);
 
@@ -320,4 +386,10 @@ void TestDXLayer::OnUpdate()
     frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
     triangleAngle += 2;
     triangleColor = (triangleColor + 1) % 255;
+    IDXGIDebug1* pDebug = nullptr;
+    if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebug))))
+    {
+        pDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
+        pDebug->Release();
+    }
 }

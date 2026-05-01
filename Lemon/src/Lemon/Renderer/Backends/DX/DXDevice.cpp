@@ -44,7 +44,7 @@ DXDevice::DXDevice(const Desc& desc) : IDevice()
 
     // Create heaps
     m_SrvHeap = std::make_unique<DXDescriptorHeap>(m_Handle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV,
-                                                   128, // max textures + CBV (//TODO increase this later)
+                                                   1024, // max textures + CBV (//TODO increase this later)
                                                    true);
     m_RtvHeap = std::make_unique<DXDescriptorHeap>(m_Handle, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 64, false);
     m_DsvHeap = std::make_unique<DXDescriptorHeap>(m_Handle, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 16, false);
