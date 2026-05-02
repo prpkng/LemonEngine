@@ -15,6 +15,7 @@
 #include "Backends/DX/API/DXPSO.h"
 #include "Backends/DX/API/DXRootSignatureDesc.h"
 #include "Backends/DX/Commands/DXCommandQueue.h"
+#include "ResourcePool.h"
 
 // #include <ResourceUploadBatch.h>
 // #include <DescriptorHeap.h>
@@ -50,13 +51,13 @@ private:
 
     std::shared_ptr<Lemon::DX::DXDevice>       device;
     std::shared_ptr<Lemon::DX::DXSwapchain>    swapchain;
-    std::shared_ptr<Lemon::DX::DXPipeline>     pipeline;
     std::shared_ptr<Lemon::DX::DXCommandQueue> graphicsQueue;
     std::shared_ptr<Lemon::DX::DXVertexBuffer> vertexBuffer;
     std::shared_ptr<Lemon::DX::DXIndexBuffer>  indexBuffer;
+    std::shared_ptr<Lemon::DX::DXPipeline>     pipeline;
 
-    std::shared_ptr<Lemon::DX::DXTexture>     texture;
+    Lemon::TextureHandle                      textureHandle;
     std::shared_ptr<Lemon::DX::DXTextureView> textureView;
-    std::shared_ptr<Lemon::DX::DXTexture>     depthTexture;
-    std::shared_ptr<Lemon::DX::DXTextureView>     depthTextureView;
+    Lemon::TextureHandle                      depthTextureHandle;
+    std::shared_ptr<Lemon::DX::DXTextureView> depthTextureView;
 };

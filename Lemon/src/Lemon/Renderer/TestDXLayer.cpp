@@ -18,11 +18,13 @@
 #include "Backends/DX/DXDevice.h"
 #include "Backends/DX/Resources/DXBuffer.h"
 #include "Backends/DX/Resources/DXTexture.h"
+#include "Lemon/Renderer/RHI/Interfaces/IDevice.h"
 #include "Lemon/Renderer/RHI/Types/RHICommandTypes.h"
 #include "MeshLoader.h"
 #include "Platform/WindowsWindow.h"
 #include "RHI/Helpers/Builders.h"
 #include "RHI/Interfaces/ICommandList.h"
+#include "Renderer.h"
 #include "SDL3/SDL_mouse.h"
 #include "SDL3/SDL_properties.h"
 #include "SDL3/SDL_video.h"
@@ -51,6 +53,7 @@ using namespace linalg::aliases;
 // #include <DirectXHelpers.h>
 // #include <ResourceUploadBatch.h>
 
+using namespace Lemon;
 using namespace Lemon::RHI;
 using namespace Lemon::DX;
 #define PI 3.14159
@@ -73,14 +76,6 @@ void logHRError(HRESULT hr, std::string_view msg)
 }
 
 enum Descriptors { Texture, Count };
-
-void TestDXLayer::CreateTexture(const std::shared_ptr<DXDevice>&       device,
-                                const std::shared_ptr<DXCommandQueue>& graphicsQueue)
-{
-    texture = std::dynamic_pointer_cast<DXTexture>(device->LoadTexture("assets/test.png"));
-
-    textureView = std::unique_ptr<DXTextureView>(dynamic_cast<DXTextureView*>(texture->CreateSRV().release()));
-}
 
 void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device)
 {
@@ -116,53 +111,6 @@ void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice)
     auto mesh  = loadFirstMesh("assets/monkey.fbx");
     indexCount = mesh.indices.size();
 
-    // std::vector<Vertex> vertices = {
-    //     // Front face (z = +0.5)
-    //     {float3(-0.5f,  0.5f,  0.5f), float3(1, 0, 0), float2(0, 0)},
-    //     { float3(0.5f,  0.5f,  0.5f), float3(1, 0, 0), float2(1, 0)},
-    //     { float3(0.5f, -0.5f,  0.5f), float3(1, 0, 0), float2(1, 1)},
-    //     {float3(-0.5f, -0.5f,  0.5f), float3(1, 0, 0), float2(0, 1)},
-
-    //     // Back face (z = -0.5)
-    //     { float3(0.5f,  0.5f, -0.5f), float3(0, 1, 0), float2(0, 0)},
-    //     {float3(-0.5f,  0.5f, -0.5f), float3(0, 1, 0), float2(1, 0)},
-    //     {float3(-0.5f, -0.5f, -0.5f), float3(0, 1, 0), float2(1, 1)},
-    //     { float3(0.5f, -0.5f, -0.5f), float3(0, 1, 0), float2(0, 1)},
-
-    //     // Left face (x = -0.5)
-    //     {float3(-0.5f,  0.5f, -0.5f), float3(0, 0, 1), float2(0, 0)},
-    //     {float3(-0.5f,  0.5f,  0.5f), float3(0, 0, 1), float2(1, 0)},
-    //     {float3(-0.5f, -0.5f,  0.5f), float3(0, 0, 1), float2(1, 1)},
-    //     {float3(-0.5f, -0.5f, -0.5f), float3(0, 0, 1), float2(0, 1)},
-
-    //     // Right face (x = +0.5)
-    //     { float3(0.5f,  0.5f,  0.5f), float3(1, 1, 0), float2(0, 0)},
-    //     { float3(0.5f,  0.5f, -0.5f), float3(1, 1, 0), float2(1, 0)},
-    //     { float3(0.5f, -0.5f, -0.5f), float3(1, 1, 0), float2(1, 1)},
-    //     { float3(0.5f, -0.5f,  0.5f), float3(1, 1, 0), float2(0, 1)},
-
-    //     // Top face (y = +0.5)
-    //     {float3(-0.5f,  0.5f, -0.5f), float3(1, 0, 1), float2(0, 0)},
-    //     { float3(0.5f,  0.5f, -0.5f), float3(1, 0, 1), float2(1, 0)},
-    //     { float3(0.5f,  0.5f,  0.5f), float3(1, 0, 1), float2(1, 1)},
-    //     {float3(-0.5f,  0.5f,  0.5f), float3(1, 0, 1), float2(0, 1)},
-
-    //     // Bottom face (y = -0.5)
-    //     {float3(-0.5f, -0.5f,  0.5f), float3(0, 1, 1), float2(0, 0)},
-    //     { float3(0.5f, -0.5f,  0.5f), float3(0, 1, 1), float2(1, 0)},
-    //     { float3(0.5f, -0.5f, -0.5f), float3(0, 1, 1), float2(1, 1)},
-    //     {float3(-0.5f, -0.5f, -0.5f), float3(0, 1, 1), float2(0, 1)},
-    // };
-
-    // std::vector<u16> indices = {
-    //     0,  1,  2,  0,  2,  3,  // front
-    //     4,  5,  6,  4,  6,  7,  // back
-    //     8,  9,  10, 8,  10, 11, // left
-    //     12, 13, 14, 12, 14, 15, // right
-    //     16, 17, 18, 16, 18, 19, // top
-    //     20, 21, 22, 20, 22, 23, // bottom
-    // };
-
     IBuffer::Desc vertexDesc(BufferUsage::Vertex, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(mesh.vertices)));
 
     auto layout = VertexLayoutBuilder()
@@ -180,37 +128,27 @@ void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice)
 
 TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX Layer")
 {
-
     window = dynamic_cast<Lemon::WindowsWindow*>(wnd.get());
 
-    const SDL_PropertiesID props = SDL_GetWindowProperties(window->m_Handle);
-    const auto hwnd = static_cast<HWND>(SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr));
-    LM_CORE_ASSERT(hwnd, "Failed to retrieve HWND from SDL!");
-
-    DXDevice::Desc desc{};
+    IDevice::Desc desc{};
     desc.enableDebugLayer = true;
     desc.initialWidth     = window->GetWidth();
     desc.initialHeight    = window->GetHeight();
-    desc.nativeWindowPtr  = hwnd;
+    Renderer::Instance().Init(wnd, desc);
 
-    device = std::make_shared<DXDevice>(desc);
-
-    graphicsQueue = std::dynamic_pointer_cast<DXCommandQueue>(device->GetDefaultGraphicsQueue());
-
-    auto swapChainDesc = ISwapchain::Desc{.windowHandle = hwnd,
-                                          .width        = window->GetWidth(),
-                                          .height       = window->GetHeight(),
-                                          .bufferCount  = 2,
-                                          .format       = Format::RGBA8_UNORM};
-    swapchain          = std::dynamic_pointer_cast<DXSwapchain>(device->CreateSwapchain(graphicsQueue, swapChainDesc));
+    device          = std::dynamic_pointer_cast<DXDevice>(Renderer::Instance().GetDevice());
+    graphicsQueue   = std::dynamic_pointer_cast<DXCommandQueue>(Renderer::Instance().GetGraphicsQueue());
+    swapchain       = std::dynamic_pointer_cast<DXSwapchain>(Renderer::Instance().GetSwapchain());
 
     ITexture::Desc depthDesc{};
     depthDesc.width          = window->GetWidth();
     depthDesc.height         = window->GetHeight();
     depthDesc.format         = Format::D32_FLOAT;
     depthDesc.isDepthStencil = true;
+    depthDesc.debugName      = "DepthBuffer";
 
-    depthTexture = std::dynamic_pointer_cast<DXTexture>(device->CreateTexture(depthDesc));
+    depthTextureHandle = Renderer::Instance().CreateTexture(depthDesc);
+    auto depthTexture = Renderer::Instance().GetNativeTexture(depthTextureHandle);
     depthTextureView =
         std::shared_ptr<DXTextureView>(dynamic_cast<DXTextureView*>(depthTexture->CreateDSV().release()));
 
@@ -218,7 +156,11 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
 
     InitBuffers(device);
 
-    texture = std::dynamic_pointer_cast<DXTexture>(device->LoadTexture("assets/test.png"));
+    
+    textureHandle = Renderer::Instance().LoadTexture("assets/test.png");
+    // texture = dynamic_cast<DXTexture*>(device->LoadTexture("assets/test.png"));
+
+    auto texture = Renderer::Instance().GetNativeTexture(textureHandle);
 
     textureView = std::unique_ptr<DXTextureView>(dynamic_cast<DXTextureView*>(texture->CreateSRV().release()));
 
@@ -262,6 +204,8 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
     ImGui_ImplDX12_Init(&initInfo);
 
     ImGui::StyleColorsDark();
+
+    Renderer::Instance().PrintStats();
 }
 
 float4 from_euler(float pitch, float yaw, float roll)
@@ -375,21 +319,12 @@ void TestDXLayer::OnUpdate()
 
     cmdList->End();
 
-    const u64 frameDone = graphicsQueue->SubmitSingle(*cmdList);
+    frameFenceValues[frameIndex] = graphicsQueue->SubmitSingle(*cmdList);
 
     swapchain->Present(1);
     swapchain->ResetBackbufferStates();
 
-    // Wait on the CPU for the GPU frame to finish
-    graphicsQueue->CpuWaitForValue(frameDone - 1);
-
     frameIndex = (frameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
     triangleAngle += 2;
     triangleColor = (triangleColor + 1) % 255;
-    IDXGIDebug1* pDebug = nullptr;
-    if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebug))))
-    {
-        pDebug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
-        pDebug->Release();
-    }
 }

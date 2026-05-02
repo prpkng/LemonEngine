@@ -36,7 +36,7 @@ namespace Lemon::RHI
         
         [[nodiscard]] virtual std::shared_ptr<ISwapchain> CreateSwapchain(const std::shared_ptr<ICommandQueue>& cmdQueue, const ISwapchain::Desc& desc) = 0;
 
-        [[nodiscard]] virtual std::shared_ptr<ITexture> CreateTexture(RHI::ITexture::Desc desc) = 0;
+        [[nodiscard]] virtual ITexture* CreateTexture(RHI::ITexture::Desc desc) = 0;
 
         [[nodiscard]] virtual std::shared_ptr<IUploadContext> CreateUploadContext() = 0;
 
@@ -57,7 +57,7 @@ namespace Lemon::RHI
             return CreateVertexBuffer(vertexDesc);
         };
 
-        [[nodiscard]] std::shared_ptr<ITexture> LoadTexture(std::string_view path, Format format = Format::RGBA8_UNORM, u32 mipLevels = 1);
+        [[nodiscard]] ITexture* LoadTexture(std::string_view path, Format format = Format::RGBA8_UNORM, u32 mipLevels = 1);
 
         [[nodiscard]] virtual std::shared_ptr<ICommandQueue> GetDefaultCopyQueue() = 0;
         [[nodiscard]] virtual std::shared_ptr<ICommandQueue> GetDefaultGraphicsQueue() = 0;

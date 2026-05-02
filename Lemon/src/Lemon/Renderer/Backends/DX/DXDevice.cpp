@@ -178,7 +178,7 @@ static D3D12_RESOURCE_FLAGS BuildResourceFlags(const RHI::ITexture::Desc& desc) 
     return flags;
 }
 
-std::shared_ptr<RHI::ITexture> DXDevice::CreateTexture(RHI::ITexture::Desc desc)
+RHI::ITexture* DXDevice::CreateTexture(RHI::ITexture::Desc desc)
 {
     // Build the D3D12 resource description
     D3D12_RESOURCE_DESC textureDesc = {};
@@ -226,7 +226,7 @@ std::shared_ptr<RHI::ITexture> DXDevice::CreateTexture(RHI::ITexture::Desc desc)
     }
 
     /// Pass everything to DXTexture
-    return std::make_shared<DXTexture>(GetHandle(), std::move(resource), m_SrvHeap.get(), m_RtvHeap.get(),
+    return new DXTexture(GetHandle(), std::move(resource), m_SrvHeap.get(), m_RtvHeap.get(),
                                        m_DsvHeap.get(), desc);
 }
 

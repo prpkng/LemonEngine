@@ -10,7 +10,7 @@
 namespace Lemon::RHI
 {
 
-std::shared_ptr<ITexture> IDevice::LoadTexture(std::string_view path, Format format , u32 mipLevels)
+ITexture* IDevice::LoadTexture(std::string_view path, Format format , u32 mipLevels)
 {
     int width, height, channels;
     std::string pathStr(path);
@@ -18,6 +18,10 @@ std::shared_ptr<ITexture> IDevice::LoadTexture(std::string_view path, Format for
 
     
     ITexture::Desc texDesc(width, height, format, mipLevels);
+
+    size_t lastSep = path.find_last_of('/');
+    texDesc.debugName = path.substr(lastSep + 1);
+
     auto texture = CreateTexture(texDesc);
 
     auto uploadContext = CreateUploadContext();

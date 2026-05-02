@@ -15,6 +15,24 @@ add_subdirectory(vendor/assimp)
 
 # add_subdirectory(vendor/DirectXTK12)
 
+set (IMGUI_SOURCES 
+    vendor/imgui/imgui/imconfig.h
+    vendor/imgui/imgui/imgui.h
+    vendor/imgui/imgui/imgui.cpp
+    vendor/imgui/imgui/imgui_demo.cpp
+    vendor/imgui/imgui/imgui_draw.cpp
+    vendor/imgui/imgui/imgui_internal.h
+    vendor/imgui/imgui/imgui_tables.cpp
+    vendor/imgui/imgui/imgui_widgets.cpp
+    vendor/imgui/imgui/imstb_rectpack.h
+    vendor/imgui/imgui/imstb_textedit.h
+    vendor/imgui/imgui/imstb_truetype.h
+    vendor/imgui/imgui/backends/imgui_impl_dx12.h
+    vendor/imgui/imgui/backends/imgui_impl_dx12.cpp
+    vendor/imgui/imgui/backends/imgui_impl_sdl3.h
+    vendor/imgui/imgui/backends/imgui_impl_sdl3.cpp
+)
+
 add_library(Lemon SHARED
  "src/Lemon.h"
  "src/Lemon/Application.h"
@@ -30,8 +48,7 @@ add_library(Lemon SHARED
  "src/Lemon/Events/MouseEvent.h"
  "src/Platform/WindowsWindow.h"
  "src/Platform/WindowsWindow.cpp" 
- "src/Lemon/Layer.h" 
- "src/Lemon/Layer.cpp"
+ "src/Lemon/Layer.h"
  "src/Lemon/LayerStack.cpp"
  "src/Lemon/LayerStack.h"
  "src/Lemon/Renderer/TestDXLayer.cpp"
@@ -46,10 +63,12 @@ add_library(Lemon SHARED
  "src/Lemon/Renderer/RHI/Interfaces/ICommandQueue.h"
  "src/Lemon/Renderer/RHI/Interfaces/IUploadContext.h"
  "src/Lemon/Renderer/RHI/Interfaces/IDevice.h"
+ "src/Lemon/Renderer/RHI/Interfaces/IDevice.cpp"
  "src/Lemon/Renderer/RHI/Interfaces/IPipeline.h"
  "src/Lemon/Renderer/RHI/Interfaces/IShader.h"
  "src/Lemon/Renderer/RHI/Interfaces/IBuffer.h"
  "src/Lemon/Renderer/RHI/Interfaces/ITexture.h"
+ 
  
 
  "src/Lemon/Renderer/Backends/DX/API/Helpers.cpp"
@@ -78,23 +97,15 @@ add_library(Lemon SHARED
  "src/Lemon/Renderer/Backends/DX/Commands/DXCommandQueue.cpp"
  "src/Lemon/Renderer/Backends/DX/Commands/DXCommandList.cpp"
  "src/Lemon/Renderer/Backends/DX/Commands/DXCommandList.h"
- src/Lemon/Renderer/RHI/Interfaces/IDevice.cpp
 
-    vendor/imgui/imgui/imconfig.h
-    vendor/imgui/imgui/imgui.h
-    vendor/imgui/imgui/imgui.cpp
-    vendor/imgui/imgui/imgui_demo.cpp
-    vendor/imgui/imgui/imgui_draw.cpp
-    vendor/imgui/imgui/imgui_internal.h
-    vendor/imgui/imgui/imgui_tables.cpp
-    vendor/imgui/imgui/imgui_widgets.cpp
-    vendor/imgui/imgui/imstb_rectpack.h
-    vendor/imgui/imgui/imstb_textedit.h
-    vendor/imgui/imgui/imstb_truetype.h
-    vendor/imgui/imgui/backends/imgui_impl_dx12.h
-    vendor/imgui/imgui/backends/imgui_impl_dx12.cpp
-    vendor/imgui/imgui/backends/imgui_impl_sdl3.h
-    vendor/imgui/imgui/backends/imgui_impl_sdl3.cpp
+ ${IMGUI_SOURCES}
+
+"src/Lemon/Renderer/Renderer.h"
+"src/Lemon/Renderer/Renderer.cpp"
+"src/Lemon/Renderer/ResourcePool.h"
+"src/Lemon/Renderer/ResourcePool.cpp"
+"src/Lemon/ImGui/ImGuiLayer.h"
+"src/Lemon/ImGui/ImGuiLayer.cpp"
  )
 
 target_compile_features(Lemon PUBLIC cxx_std_23)

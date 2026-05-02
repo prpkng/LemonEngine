@@ -19,6 +19,8 @@ public:
                   const RHI::ITextureView::Desc& desc,
                   DXDescriptorHeap::Allocation   allocation);
 
+    // TODO texture view destruction
+
     [[nodiscard]] RHI::TextureViewType           GetType() const override { return m_Desc.type; }
     [[nodiscard]] const RHI::ITextureView::Desc& GetDesc() const override { return m_Desc; }
     [[nodiscard]] const RHI::ITexture&           GetTexture() const override { return m_Texture; }
@@ -46,6 +48,8 @@ public:
               DXDescriptorHeap*      rtvHeap,
               DXDescriptorHeap*      dsvHeap,
               ITexture::Desc         desc);
+
+    // TODO texture destruction
 
     [[nodiscard]] const Desc& GetDesc() const override { return m_Desc; }
     [[nodiscard]] u32         GetWidth() const override { return m_Desc.width; }
