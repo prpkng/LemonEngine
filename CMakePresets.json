@@ -6,7 +6,15 @@
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/bin/${presetName}",
-      "installDir": "${sourceDir}/bin/install/${presetName}",
+        "installDir": "${sourceDir}/bin/install/${presetName}",
+      
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+                "enableMicrosoftCodeAnalysis": true,
+                "enableClangTidyCodeAnalysis": true
+            }
+        },
+
       "cacheVariables": {
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe",

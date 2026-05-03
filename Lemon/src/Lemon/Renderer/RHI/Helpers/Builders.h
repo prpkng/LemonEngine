@@ -12,7 +12,7 @@ namespace Lemon::RHI
     {
     public:
         explicit VertexLayoutBuilder();
-        VertexLayoutBuilder& WithElement(const std::string& semanticName, ElementType type, bool addToAccumulation = true);
+        VertexLayoutBuilder& WithElement(Semantic semantic, ElementType type, bool addToAccumulation = true);
         [[nodiscard]] VertexLayout Build(InputRate inputRate = InputRate::PerVertex);
 
     private:
@@ -25,7 +25,7 @@ namespace Lemon::RHI
     {
     public:
         explicit InputLayoutBuilder();
-        InputLayoutBuilder& WithElement(const std::string& semanticName, ElementType type, InputRate inputRate = InputRate::PerVertex, u32 semanticIndex = 0);
+        InputLayoutBuilder& WithElement(Semantic semantic, ElementType type, InputRate inputRate = InputRate::PerVertex);
         [[nodiscard]] std::vector<VertexAttribute> Build();
 
     private:

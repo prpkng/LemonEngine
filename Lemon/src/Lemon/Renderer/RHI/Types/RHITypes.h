@@ -116,18 +116,39 @@ enum class CullMode : u32 { None, Front, Back };
 /// @code maps to D3D12_FILL_MODE / VkPolygonMode @endcode
 enum class FillMode : u32 { Solid, Wireframe };
 
+enum class Semantic {
+    Position,
+    Normal,
+    TexCoord0,
+    TexCoord1,
+    TexCoord2,
+    TexCoord3,
+    TexCoord4,
+    TexCoord5,
+    TexCoord6,
+    TexCoord7,
+    Color,
+    Tangent,
+    BoneIndices,
+    BoneWeights,
+};
+
+
 /// @brief Vertex attribute description
 ///
 /// @code maps to D3D12_INPUT_ELEMENT_DESC / VkVertexInputAttributeDescription +
 /// VkVertexInputBindingDescription @endcode
 struct VertexAttribute {
-    std::string semanticName; /// DX12 uses this; Vulkan uses only location
-    u32         semanticIndex = 0;
+    Semantic semantic = Semantic::Position; /// DX12 uses this; Vulkan uses only location
     ElementType format = ElementType::Unknown;
     u32         binding = 0;
     u32         offset = 0;
     InputRate   inputRate = InputRate::PerVertex;
     u32         location = 0; /// Vulkan: explicit; DX12: ignored (uses semantic)
+
+    std::string _semanticName_;
+
+    void BuildSemanticName();
 };
 
 /// @brief Root parameter type
@@ -286,7 +307,7 @@ enum class BufferUsage { Vertex, Index, Uniform, Storage, Indirect, Staging };
 
 /// \brief A description of a single vertex element entry
 struct VertexElement {
-    std::string name;   /// Entry name (must match the shader definition)
+    Semantic semantic;   /// Entry name (must match the shader definition)
     ElementType type;   /// Element type (must match the data)
     u32         offset; /// Pointer offset
 };

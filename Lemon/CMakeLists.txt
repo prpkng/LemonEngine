@@ -55,6 +55,8 @@ add_library(Lemon SHARED
  "src/Lemon/Renderer/TestDXLayer.h"
  "src/Lemon/Renderer/RHI/Helpers/Builders.h"
  "src/Lemon/Renderer/RHI/Helpers/Builders.cpp"
+ "src/Lemon/Renderer/RHI/Helpers/RHIHelpers.h"
+ "src/Lemon/Renderer/RHI/Helpers/RHIHelpers.cpp"
  "src/Lemon/Renderer/RHI/Types/RHICommandTypes.h"
  "src/Lemon/Renderer/RHI/Types/RHIEnums.h"
  "src/Lemon/Renderer/RHI/Types/RHITypes.h"
@@ -106,7 +108,12 @@ add_library(Lemon SHARED
 "src/Lemon/Renderer/ResourcePool.cpp"
 "src/Lemon/ImGui/ImGuiLayer.h"
 "src/Lemon/ImGui/ImGuiLayer.cpp"
- )
+"src/Lemon/Renderer/MeshAsset.h"
+src/Lemon/Renderer/RHI/Types/RHITypes.cpp
+src/Lemon/Renderer/Mesh.h
+src/Lemon/Renderer/Mesh.cpp
+  
+)
 
 target_compile_features(Lemon PUBLIC cxx_std_23)
 target_include_directories(Lemon PUBLIC src/ vendor/dx-headers vendor/include vendor/imgui/imgui)

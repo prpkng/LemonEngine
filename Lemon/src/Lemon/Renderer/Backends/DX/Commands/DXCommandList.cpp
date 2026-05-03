@@ -6,10 +6,12 @@
 #include "Lemon/Renderer/Backends/DX/Pipelines/DXPipeline.h"
 #include "Lemon/Renderer/Backends/DX/Resources/DXBuffer.h"
 #include "Lemon/Renderer/Backends/DX/Resources/DXTexture.h"
+#include "Lemon/Renderer/RHI/Interfaces/IBuffer.h"
 #include "d3d12.h"
 
 namespace Lemon::DX
 {
+
 DXCommandList::DXCommandList(std::shared_ptr<DXDevice>         device,
                              ComPtr<ID3D12GraphicsCommandList> cmdList,
                              ComPtr<ID3D12CommandAllocator>    allocator,
@@ -206,19 +208,48 @@ void DXCommandList::ClearRenderTarget(const ITextureView* renderTarget, const st
     m_CmdList->ClearRenderTargetView(dxView->GetCPUHandle(), color.data(), 0, nullptr);
 }
 
-void DXCommandList::BindVertexBuffer(const std::shared_ptr<RHI::IVertexBuffer> buffer)
+void DXCommandList::BindVertexBuffer(const VertexBufferView view)
 {
     AssertRecording();
 
-    auto dxBuffer = std::dynamic_pointer_cast<DXVertexBuffer>(buffer);
-    m_CmdList->IASetVertexBuffers(0, 1, dxBuffer->GetBufferView());
+
+    const auto bufferAsDX = std::dynamic_pointer_cast<DXBuffer>(view.buffer);
+
+    D3D12_VERTEX_BUFFER_VIEW dxView = {};
+    dxView.BufferLocation = bufferAsDX->GetVirtualAddress() + view.offset;
+    dxView.SizeInBytes = bufferAsDX->GetSize();
+    dxView.StrideInBytes = view.stride;
+
+    m_CmdList->IASetVertexBuffers(0, 1, &dxView);
 }
 
-void DXCommandList::BindIndexBuffer(const std::shared_ptr<RHI::IIndexBuffer> buffer)
+void DXCommandList::BindVertexBuffers(std::span<VertexBufferView> views) {
+    AssertRecording();
+
+    std::vector<D3D12_VERTEX_BUFFER_VIEW> dxViews{};
+    dxViews.reserve(views.size());
+    for (const auto& view : views) {
+        const auto bufferAsDX = std::dynamic_pointer_cast<DXBuffer>(view.buffer);
+
+        D3D12_VERTEX_BUFFER_VIEW dxView = {};
+        dxView.BufferLocation = bufferAsDX->GetVirtualAddress() + view.offset;
+        dxView.SizeInBytes = bufferAsDX->GetSize();
+        dxView.StrideInBytes = view.stride;
+        dxViews.emplace_back(dxView);
+    }
+    m_CmdList->IASetVertexBuffers(0, static_cast<UINT>(dxViews.size()), dxViews.data());
+}
+
+void DXCommandList::BindIndexBuffer(const IndexBufferView view)
 {
     AssertRecording();
 
-    auto dxBuffer = std::dynamic_pointer_cast<DXIndexBuffer>(buffer);
-    m_CmdList->IASetIndexBuffer(dxBuffer->GetBufferView());
+    const auto bufferAsDX = std::dynamic_pointer_cast<DXBuffer>(view.buffer);
+
+    D3D12_INDEX_BUFFER_VIEW dxView = {};
+    dxView.BufferLocation = bufferAsDX->GetVirtualAddress() + view.offset;
+    dxView.SizeInBytes = view.size;
+    dxView.Format = TranslateElementTypeToFormat(view.indexType);
+    m_CmdList->IASetIndexBuffer(&dxView);
 }
 } // namespace Lemon::DX

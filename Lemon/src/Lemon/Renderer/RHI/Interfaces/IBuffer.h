@@ -1,5 +1,6 @@
 #pragma once
 #include "Lemon/Renderer/RHI/Types/RHITypes.h"
+#include <cstddef>
 #include <span>
 
 namespace Lemon::RHI
@@ -44,42 +45,19 @@ namespace Lemon::RHI
         MemoryUsage m_MemoryUsage;
     };
 
-    struct IVertexBuffer
-    {
-        struct Desc
-        {
-            IBuffer::Desc bufferDesc{};
-            VertexLayout layout{};
-            u32 binding{};
-        };
-        explicit IVertexBuffer(const Desc& desc) : m_Layout(desc.layout), m_Binding(desc.binding) {}
-        virtual ~IVertexBuffer() = default;
-
-        virtual const std::shared_ptr<IBuffer> GetBuffer() const = 0;
-        [[nodiscard]] const VertexLayout& GetLayout() const { return m_Layout; };
-        [[nodiscard]] constexpr u32 GetBinding() const { return m_Binding; };
-    private:
-        VertexLayout m_Layout;
-        uint32_t m_Binding;
-
+    struct VertexBufferView {
+        std::shared_ptr<IBuffer> buffer;
+        size_t offset{};
+        size_t stride{};
+        size_t size{};
     };
 
-    struct IIndexBuffer
-    {
-        struct Desc
-        {
-            IBuffer::Desc bufferDesc{};
-            u32 binding{};
-            ElementType indexType = ElementType::Uint;
-        };
-        explicit IIndexBuffer(const Desc& desc) : m_Binding(desc.binding), m_IndexType(desc.indexType) {}
-        virtual ~IIndexBuffer() = default;
+    struct IndexBufferView {
+        std::shared_ptr<IBuffer> buffer;
 
-        virtual const std::shared_ptr<IBuffer> GetBuffer() const = 0;
-        [[nodiscard]] constexpr ElementType GetIndexType() const { return m_IndexType; }
-        [[nodiscard]] constexpr u32 GetBinding() const { return m_Binding; };
-    protected:
-        u32 m_Binding;
-        ElementType m_IndexType;
+        size_t offset{};
+        size_t size{};
+        ElementType indexType{};
     };
+
 }

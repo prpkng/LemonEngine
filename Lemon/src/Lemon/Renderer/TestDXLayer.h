@@ -9,6 +9,7 @@
 #include "Backends/DX/Resources/DXBuffer.h"
 #include "Backends/DX/Resources/DXSwapchain.h"
 #include "Backends/DX/Resources/DXTexture.h"
+#include "Lemon/Renderer/RHI/Interfaces/IBuffer.h"
 #include "Lemon/Window.h"
 #include "Platform/WindowsWindow.h"
 
@@ -52,8 +53,8 @@ private:
     std::shared_ptr<Lemon::DX::DXDevice>       device;
     std::shared_ptr<Lemon::DX::DXSwapchain>    swapchain;
     std::shared_ptr<Lemon::DX::DXCommandQueue> graphicsQueue;
-    std::shared_ptr<Lemon::DX::DXVertexBuffer> vertexBuffer;
-    std::shared_ptr<Lemon::DX::DXIndexBuffer>  indexBuffer;
+    Lemon::RHI::VertexBufferView vertexBuffers[3];
+    Lemon::RHI::IndexBufferView  indexBuffer;
     std::shared_ptr<Lemon::DX::DXPipeline>     pipeline;
 
     Lemon::TextureHandle                      textureHandle;
@@ -61,3 +62,4 @@ private:
     Lemon::TextureHandle                      depthTextureHandle;
     std::shared_ptr<Lemon::DX::DXTextureView> depthTextureView;
 };
+

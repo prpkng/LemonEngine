@@ -2,6 +2,7 @@
 
 #include "../API/Helpers.h"
 #include "Lemon/Renderer/Backends/DX/DXDevice.h"
+#include "Lemon/Renderer/RHI/Interfaces/IBuffer.h"
 #include "Lemon/Renderer/RHI/Interfaces/ITexture.h"
 #include <Lemon/Renderer/RHI/Interfaces/ICommandList.h>
 #include <Lemon/Renderer/RHI/Interfaces/ICommandQueue.h>
@@ -51,8 +52,9 @@ public:
     using ICommandList::ClearDepthStencil;
 
     // === Buffers ===
-    void BindVertexBuffer(std::shared_ptr<IVertexBuffer> buffer) override;
-    void BindIndexBuffer(std::shared_ptr<IIndexBuffer> buffer) override;
+    void BindVertexBuffer(VertexBufferView buffer) override;
+    void BindVertexBuffers(std::span<VertexBufferView> buffers) override;
+    void BindIndexBuffer(IndexBufferView buffer) override;
     // -----------------------------------------------------------------------
     // Internal access for DX12CommandQueue
     // -----------------------------------------------------------------------

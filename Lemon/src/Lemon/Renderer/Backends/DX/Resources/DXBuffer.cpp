@@ -78,27 +78,4 @@ namespace Lemon::DX
         std::memcpy(static_cast<uint8_t*>(mapped) + offset, data, size);
         Unmap();
     }
-
-
-    DXVertexBuffer::DXVertexBuffer(std::shared_ptr<DXDevice> device, const Desc& desc) : IVertexBuffer(desc)
-    {
-        m_Buffer = device->CreateBuffer(desc.bufferDesc);
-
-        const auto bufferAsDX = std::dynamic_pointer_cast<DXBuffer>(m_Buffer);
-        m_VertexBufferView = {};
-        m_VertexBufferView.BufferLocation = bufferAsDX->GetVirtualAddress();
-        m_VertexBufferView.SizeInBytes = m_Buffer->GetSize();
-        m_VertexBufferView.StrideInBytes = desc.layout.stride;
-    }
-
-    DXIndexBuffer::DXIndexBuffer(std::shared_ptr<DXDevice> device, const Desc& desc) : IIndexBuffer(desc)
-    {
-        m_Buffer = device->CreateBuffer(desc.bufferDesc);
-
-        const auto bufferAsDX = std::dynamic_pointer_cast<DXBuffer>(m_Buffer);
-        m_IndexBufferView = {};
-        m_IndexBufferView.BufferLocation = bufferAsDX->GetVirtualAddress();
-        m_IndexBufferView.SizeInBytes = m_Buffer->GetSize();
-        m_IndexBufferView.Format = TranslateElementTypeToFormat(m_IndexType);
-    }
 }

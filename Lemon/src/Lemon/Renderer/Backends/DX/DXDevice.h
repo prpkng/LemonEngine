@@ -19,8 +19,6 @@ class DXDevice : public RHI::IDevice, public std::enable_shared_from_this<DXDevi
 {
 public:
     [[nodiscard]] std::shared_ptr<RHI::IBuffer>       CreateBuffer(const RHI::IBuffer::Desc& desc) override;
-    [[nodiscard]] std::shared_ptr<RHI::IVertexBuffer> CreateVertexBuffer(const RHI::IVertexBuffer::Desc& desc) override;
-    [[nodiscard]] std::shared_ptr<RHI::IIndexBuffer>  CreateIndexBuffer(const RHI::IIndexBuffer::Desc& desc) override;
     [[nodiscard]] std::shared_ptr<RHI::IPipeline>     CreatePipeline(const RHI::IPipeline::Desc& desc) override;
     [[nodiscard]] std::shared_ptr<RHI::ICommandQueue> CreateCommandQueue(RHI::QueueType type) override;
     [[nodiscard]] std::shared_ptr<RHI::ISwapchain> CreateSwapchain(const std::shared_ptr<RHI::ICommandQueue>& cmdQueue,
@@ -38,8 +36,6 @@ public:
     ComPtr<ID3D12Device> GetHandle() const { return m_Handle; }
     ComPtr<ID3D12Device> m_Handle;
 
-    using RHI::IDevice::CreateIndexBuffer;
-    using RHI::IDevice::CreateVertexBuffer;
     std::unique_ptr<DXDescriptorHeap> m_SrvHeap;
     std::unique_ptr<DXDescriptorHeap> m_RtvHeap;
     std::unique_ptr<DXDescriptorHeap> m_DsvHeap;

@@ -29,8 +29,6 @@ namespace Lemon::RHI
         [[nodiscard]] virtual std::shared_ptr<ICommandQueue> CreateCommandQueue(QueueType type) = 0;
 
         [[nodiscard]] virtual std::shared_ptr<IBuffer> CreateBuffer(const IBuffer::Desc& desc) = 0;
-        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(const IVertexBuffer::Desc& desc) = 0;
-        [[nodiscard]] virtual std::shared_ptr<IIndexBuffer> CreateIndexBuffer(const IIndexBuffer::Desc& desc) = 0;
 
         [[nodiscard]] virtual std::shared_ptr<IPipeline> CreatePipeline(const IPipeline::Desc& desc) = 0;
         
@@ -39,23 +37,6 @@ namespace Lemon::RHI
         [[nodiscard]] virtual ITexture* CreateTexture(RHI::ITexture::Desc desc) = 0;
 
         [[nodiscard]] virtual std::shared_ptr<IUploadContext> CreateUploadContext() = 0;
-
-        // Helper methods
-        [[nodiscard]] virtual std::shared_ptr<IIndexBuffer> CreateIndexBuffer(const IBuffer::Desc& bufferDesc, ElementType indexType) {
-            IIndexBuffer::Desc indexDesc = {
-                .bufferDesc = bufferDesc,
-                .indexType = indexType,
-            };
-            return CreateIndexBuffer(indexDesc);
-        }
-
-        [[nodiscard]] virtual std::shared_ptr<IVertexBuffer> CreateVertexBuffer(const IBuffer::Desc& bufferDesc, VertexLayout vertexLayout) {
-            IVertexBuffer::Desc vertexDesc{};
-            vertexDesc.bufferDesc = bufferDesc;
-            vertexDesc.layout = std::move(vertexLayout);
-
-            return CreateVertexBuffer(vertexDesc);
-        };
 
         [[nodiscard]] ITexture* LoadTexture(std::string_view path, Format format = Format::RGBA8_UNORM, u32 mipLevels = 1);
 

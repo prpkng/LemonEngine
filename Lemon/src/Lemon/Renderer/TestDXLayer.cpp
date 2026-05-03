@@ -18,11 +18,13 @@
 #include "Backends/DX/DXDevice.h"
 #include "Backends/DX/Resources/DXBuffer.h"
 #include "Backends/DX/Resources/DXTexture.h"
+#include "Lemon/Renderer/RHI/Helpers/Builders.h"
 #include "Lemon/Renderer/RHI/Interfaces/IDevice.h"
 #include "Lemon/Renderer/RHI/Types/RHICommandTypes.h"
 #include "MeshLoader.h"
 #include "Platform/WindowsWindow.h"
 #include "RHI/Helpers/Builders.h"
+#include "RHI/Interfaces/IBuffer.h"
 #include "RHI/Interfaces/ICommandList.h"
 #include "Renderer.h"
 #include "SDL3/SDL_mouse.h"
@@ -39,6 +41,7 @@
 #include "SDL3/SDL_timer.h"
 #include "dxgiformat.h"
 #include "imgui.h"
+#include "magic_enum/magic_enum.hpp"
 
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
@@ -57,38 +60,19 @@ using namespace Lemon;
 using namespace Lemon::RHI;
 using namespace Lemon::DX;
 #define PI 3.14159
-// struct Vertex {
-//     float3 position;
-//     float3 color;
-//     float2 uv;
-
-//     [[nodiscard]] std::string ToString() const
-//     {
-//         return fmt::format("pos: {0:.2f}x{1:.2f} color: R:{2} G:{3} B:{4}", position[0], position[1], color[0],
-//                            color[1], color[2]);
-//     }
-// };
-
-void logHRError(HRESULT hr, std::string_view msg)
-{
-    auto errorMsg = HrToString(hr);
-    LM_CORE_FATAL("{0}: ERROR {1}", msg, errorMsg);
-}
-
-enum Descriptors { Texture, Count };
 
 void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device)
 {
-
+    
     IPipeline::Desc desc{};
     desc.vertexShaderPath       = "assets/shader.hlsl";
     desc.pixelShaderPath        = "assets/shader.hlsl";
     desc.renderTargetFormats    = {Format::RGBA8_UNORM};
     desc.blendState.blendEnable = true;
     desc.inputLayout            = InputLayoutBuilder()
-                                      .WithElement("POSITION", ElementType::Float3)
-                                      .WithElement("NORMAL", ElementType::Float3)
-                                      .WithElement("TEXCOORD", ElementType::Float2)
+                                      .WithElement(Semantic::Position, ElementType::Float3)
+                                      .WithElement(Semantic::Normal, ElementType::Float3)
+                                      .WithElement(Semantic::TexCoord0, ElementType::Float2)
                                       .Build();
     desc.rootParameters         = {RootParameter(RootParamType::Constants, 1, 0, 0, ShaderStage::All),
                                    RootParameter(RootParamType::Constants, 4 * 4 * 3, 0, 1, ShaderStage::Vertex),
@@ -105,25 +89,51 @@ void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device)
 
 static size_t indexCount = 0;
 
+
 void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice)
 {
     LM_INFO("Loading mesh");
-    auto mesh  = loadFirstMesh("assets/monkey.fbx");
+    auto mesh  = loadMeshes("assets/monkey.fbx")[0];
+    
+
+    LM_INFO("Mesh loaded!");
     indexCount = mesh.indices.size();
+    u32 i = 0;
+    for (auto (attr) : mesh.attributes) {
+        IBuffer::Desc vertexDesc(BufferUsage::Vertex, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(attr.second.data)));
+        
+        auto buffer = dxDevice->CreateBuffer(vertexDesc);
+        
+        vertexBuffers[i] = VertexBufferView {
+        buffer,
+            0,
+            GetVertexElementSize(attr.second.format),
+            buffer->GetSize()
+        };
+        i++;
+    }
 
-    IBuffer::Desc vertexDesc(BufferUsage::Vertex, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(mesh.vertices)));
+    // IBuffer::Desc vertexDesc(BufferUsage::Vertex, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(mesh.vertices)));
 
-    auto layout = VertexLayoutBuilder()
-                      .WithElement("POSITION", ElementType::Float3)
-                      .WithElement("NORMAL", ElementType::Float3)
-                      .WithElement("TEXCOORD", ElementType::Float2)
-                      .Build();
+    // auto layout = VertexLayoutBuilder()
+    //                   .WithElement("POSITION", ElementType::Float3)
+    //                   .WithElement("NORMAL", ElementType::Float3)
+    //                   .WithElement("TEXCOORD", ElementType::Float2)
+    //                   .Build();
 
-    vertexBuffer = std::dynamic_pointer_cast<DXVertexBuffer>(dxDevice->CreateVertexBuffer(vertexDesc, layout));
+    // vertexBuffer = std::dynamic_pointer_cast<DXVertexBuffer>(dxDevice->CreateVertexBuffer(vertexDesc, layout));
 
     IBuffer::Desc indexDesc(BufferUsage::Index, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(mesh.indices)));
 
-    indexBuffer = std::dynamic_pointer_cast<DXIndexBuffer>(dxDevice->CreateIndexBuffer(indexDesc, ElementType::Ushort));
+    auto buffer = dxDevice->CreateBuffer(indexDesc);
+
+    indexBuffer = IndexBufferView {
+        buffer,
+        0,
+        buffer->GetSize(),
+        ElementType::Uint
+    };
+    
 }
 
 TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX Layer")
@@ -306,7 +316,9 @@ void TestDXLayer::OnUpdate()
     cmdList->PushConstants(ShaderStage::Vertex, 1, std::as_bytes(std::span(matrices)), 0);
 
     cmdList->PushConstants(ShaderStage::Vertex, 2, std::as_bytes(std::span(&triangleAngle, 1)), 0);
-    cmdList->BindVertexBuffer(vertexBuffer);
+    cmdList->BindVertexBuffers(vertexBuffers);
+    // cmdList->BindVertexBuffer(vertexBuffers[1]);
+    // cmdList->BindVertexBuffer(vertexBuffers[2]);
     cmdList->BindIndexBuffer(indexBuffer);
 
     cmdList->DrawIndexed(indexCount, 1, 0, 0, 0);

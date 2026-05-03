@@ -71,8 +71,9 @@ struct ICommandList {
     void         ClearDepthStencil(const ITextureView* dsv, float depth = 1.0f) { ClearDepthStencil(dsv, depth, 0); }
 
     // === Buffers ===
-    virtual void BindVertexBuffer(std::shared_ptr<IVertexBuffer> buffer) = 0;
-    virtual void BindIndexBuffer(std::shared_ptr<IIndexBuffer> buffer)   = 0;
+    virtual void BindVertexBuffer(VertexBufferView buffer) = 0;
+    virtual void BindVertexBuffers(std::span<VertexBufferView> buffers) = 0;
+    virtual void BindIndexBuffer(IndexBufferView buffer)   = 0;
 
     // === Push constants / Root constants ===
 

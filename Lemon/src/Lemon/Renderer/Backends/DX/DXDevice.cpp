@@ -6,6 +6,7 @@
 #include "API/Helpers.h"
 #include "Commands/DXCommandQueue.h"
 #include "Lemon/Renderer/Backends/DX/API/Helpers.h"
+#include "Lemon/Renderer/RHI/Helpers/RHIHelpers.h"
 #include "Lemon/Renderer/RHI/Interfaces/ITexture.h"
 #include "Lemon/Renderer/RHI/Types/RHICommandTypes.h"
 #include "Pipelines/DXPipeline.h"
@@ -56,16 +57,6 @@ std::shared_ptr<RHI::IBuffer> DXDevice::CreateBuffer(const RHI::IBuffer::Desc& d
     return std::make_shared<DXBuffer>(shared_from_this(), desc);
 }
 
-std::shared_ptr<RHI::IVertexBuffer> DXDevice::CreateVertexBuffer(const RHI::IVertexBuffer::Desc& desc)
-{
-    return std::make_shared<DXVertexBuffer>(shared_from_this(), desc);
-}
-
-std::shared_ptr<RHI::IIndexBuffer> DXDevice::CreateIndexBuffer(const RHI::IIndexBuffer::Desc& desc)
-{
-    return std::make_shared<DXIndexBuffer>(shared_from_this(), desc);
-}
-
 std::wstring StringToWString(const std::string& str)
 {
     std::wstring wstr;
@@ -87,9 +78,10 @@ std::string WStringToString(const std::wstring& wstr)
 std::shared_ptr<RHI::IPipeline> DXDevice::CreatePipeline(const RHI::IPipeline::Desc& desc)
 {
     std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout;
-    for (const auto& vertexAttribute : desc.inputLayout) {
+    inputLayout.reserve(desc.inputLayout.size());
+for (const auto& vertexAttribute : desc.inputLayout) {
         inputLayout.push_back(
-            {vertexAttribute.semanticName.c_str(), vertexAttribute.semanticIndex,
+            D3D12_INPUT_ELEMENT_DESC {vertexAttribute._semanticName_.c_str(), RHI::GetSemanticIndex(vertexAttribute.semantic),
              Convert::ToFormat(vertexAttribute.format), vertexAttribute.binding, vertexAttribute.offset,
              vertexAttribute.inputRate == RHI::InputRate::PerVertex ? D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA
                                                                     : D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA,
@@ -198,13 +190,13 @@ RHI::ITexture* DXDevice::CreateTexture(RHI::ITexture::Desc desc)
 
     if (desc.initialState == RHI::ResourceState::Common && desc.isRenderTarget) {
         desc.initialState = RHI::ResourceState::RenderTarget;
-        clearValue   = D3D12_CLEAR_VALUE{
+        clearValue        = D3D12_CLEAR_VALUE{
             .Format = Convert::ToFormat(desc.format),
             .Color  = {0.0f, 0.0f, 0.0f, 1.0f},
         };
     } else if (desc.initialState == RHI::ResourceState::Common && desc.isDepthStencil) {
         desc.initialState = RHI::ResourceState::DepthWrite;
-        clearValue   = D3D12_CLEAR_VALUE{
+        clearValue        = D3D12_CLEAR_VALUE{
             .Format       = Convert::ToFormat(desc.format),
             .DepthStencil = {1.0f, 0},
         };
@@ -214,9 +206,9 @@ RHI::ITexture* DXDevice::CreateTexture(RHI::ITexture::Desc desc)
     CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
 
     ComPtr<ID3D12Resource> resource;
-    CHECK(GetHandle()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &textureDesc, Convert::ToResourceState(desc.initialState),
-                                               clearValue.has_value() ? &clearValue.value() : nullptr,
-                                               IID_PPV_ARGS(&resource)),
+    CHECK(GetHandle()->CreateCommittedResource(
+              &heapProps, D3D12_HEAP_FLAG_NONE, &textureDesc, Convert::ToResourceState(desc.initialState),
+              clearValue.has_value() ? &clearValue.value() : nullptr, IID_PPV_ARGS(&resource)),
           "Failed to create texture resource");
 
     // Set debug name if available
@@ -226,28 +218,30 @@ RHI::ITexture* DXDevice::CreateTexture(RHI::ITexture::Desc desc)
     }
 
     /// Pass everything to DXTexture
-    return new DXTexture(GetHandle(), std::move(resource), m_SrvHeap.get(), m_RtvHeap.get(),
-                                       m_DsvHeap.get(), desc);
+    return new DXTexture(GetHandle(), std::move(resource), m_SrvHeap.get(), m_RtvHeap.get(), m_DsvHeap.get(), desc);
 }
 
-std::shared_ptr<RHI::IUploadContext> DXDevice::CreateUploadContext() {
+std::shared_ptr<RHI::IUploadContext> DXDevice::CreateUploadContext()
+{
     return std::make_shared<DXUploadContext>(shared_from_this());
 }
 
-
-std::shared_ptr<RHI::ICommandQueue> DXDevice::GetDefaultCopyQueue() {
-    if (m_DefaultCopyQueue != nullptr) return m_DefaultCopyQueue;
+std::shared_ptr<RHI::ICommandQueue> DXDevice::GetDefaultCopyQueue()
+{
+    if (m_DefaultCopyQueue != nullptr)
+        return m_DefaultCopyQueue;
 
     m_DefaultCopyQueue = CreateCommandQueue(RHI::QueueType::Copy);
     return m_DefaultCopyQueue;
 }
 
-std::shared_ptr<RHI::ICommandQueue> DXDevice::GetDefaultGraphicsQueue() {
-    if (m_DefaultGraphicsQueue != nullptr) return m_DefaultGraphicsQueue;
+std::shared_ptr<RHI::ICommandQueue> DXDevice::GetDefaultGraphicsQueue()
+{
+    if (m_DefaultGraphicsQueue != nullptr)
+        return m_DefaultGraphicsQueue;
 
     m_DefaultGraphicsQueue = CreateCommandQueue(RHI::QueueType::Graphics);
     return m_DefaultGraphicsQueue;
 }
-
 
 } // namespace Lemon::DX

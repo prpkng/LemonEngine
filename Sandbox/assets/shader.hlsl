@@ -1,13 +1,13 @@
 struct VSInput {
     float3 position : POSITION;
     float3 normal : NORMAL;
-    float2 uv : TEXCOORD;
+    float2 uv : TEXCOORD0;
 };
 
 struct PSInput {
     float4 position : SV_POSITION;
     float3 normal : NORMAL;
-    float2 uv : TEXCOORD;
+    float2 uv : TEXCOORD0;
 };
 
 cbuffer cb0 : register(b0) {
@@ -57,6 +57,6 @@ PSInput VSMain(VSInput input) {
 float4 PSMain(PSInput input) : SV_TARGET {
     float3 color = input.normal;//float3(input.normal, 0.0);
     
-    return float4(color, 1.0);
+    return float4(input.normal, 1.0);
     // return tex.Sample(linearSmp, input.uv);
 }
