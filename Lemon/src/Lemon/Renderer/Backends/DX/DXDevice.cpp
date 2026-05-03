@@ -79,13 +79,13 @@ std::shared_ptr<RHI::IPipeline> DXDevice::CreatePipeline(const RHI::IPipeline::D
 {
     std::vector<D3D12_INPUT_ELEMENT_DESC> inputLayout;
     inputLayout.reserve(desc.inputLayout.size());
-for (const auto& vertexAttribute : desc.inputLayout) {
-        inputLayout.push_back(
-            D3D12_INPUT_ELEMENT_DESC {vertexAttribute._semanticName_.c_str(), RHI::GetSemanticIndex(vertexAttribute.semantic),
-             Convert::ToFormat(vertexAttribute.format), vertexAttribute.binding, vertexAttribute.offset,
-             vertexAttribute.inputRate == RHI::InputRate::PerVertex ? D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA
-                                                                    : D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA,
-             0});
+    for (const auto& vertexAttribute : desc.inputLayout) {
+        inputLayout.push_back(D3D12_INPUT_ELEMENT_DESC{
+            vertexAttribute._semanticName_.c_str(), RHI::GetSemanticIndex(vertexAttribute.semantic),
+            Convert::ToFormat(vertexAttribute.format), vertexAttribute.binding, vertexAttribute.offset,
+            vertexAttribute.inputRate == RHI::InputRate::PerVertex ? D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA
+                                                                   : D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA,
+            0});
     }
 
     DXRootSignatureDesc rootDesc;

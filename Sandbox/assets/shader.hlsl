@@ -6,7 +6,7 @@ struct VSInput {
 
 struct PSInput {
     float4 position : SV_POSITION;
-    float3 normal : NORMAL;
+    nointerpolation float3 normal : NORMAL;
     float2 uv : TEXCOORD0;
 };
 
@@ -47,7 +47,7 @@ PSInput VSMain(VSInput input) {
     float4 pos = float4(input.position, 1.0f);
 
     output.position = mul(proj, mul(view, mul(model, pos)));
-    output.normal = input.normal;
+    output.normal = normalize(mul((float3x3)model, input.normal));
     output.uv = input.uv;
 
     return output;
@@ -55,8 +55,9 @@ PSInput VSMain(VSInput input) {
 
 // Pixel Shader
 float4 PSMain(PSInput input) : SV_TARGET {
-    float3 color = input.normal;//float3(input.normal, 0.0);
-    
-    return float4(input.normal, 1.0);
+    float3 normalMap = normalize(input.normal);
+    // normalMap.g = -normalMap.g; // <--- FLIP GREEN CHANNEL
+
+    return float4(normalMap, 1.0);
     // return tex.Sample(linearSmp, input.uv);
 }

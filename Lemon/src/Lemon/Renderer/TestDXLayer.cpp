@@ -26,6 +26,7 @@
 #include "RHI/Helpers/Builders.h"
 #include "RHI/Interfaces/IBuffer.h"
 #include "RHI/Interfaces/ICommandList.h"
+#include "RHI/Types/RHITypes.h"
 #include "Renderer.h"
 #include "SDL3/SDL_mouse.h"
 #include "SDL3/SDL_properties.h"
@@ -70,9 +71,9 @@ void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device)
     desc.renderTargetFormats    = {Format::RGBA8_UNORM};
     desc.blendState.blendEnable = true;
     desc.inputLayout            = InputLayoutBuilder()
-                                      .WithElement(Semantic::Position, ElementType::Float3)
-                                      .WithElement(Semantic::Normal, ElementType::Float3)
-                                      .WithElement(Semantic::TexCoord0, ElementType::Float2)
+                                      .WithElement(Semantic::Position, ElementType::Float3, 0)
+                                      .WithElement(Semantic::Normal, ElementType::Float3, 1)
+                                      .WithElement(Semantic::TexCoord0, ElementType::Float2, 2)
                                       .Build();
     desc.rootParameters         = {RootParameter(RootParamType::Constants, 1, 0, 0, ShaderStage::All),
                                    RootParameter(RootParamType::Constants, 4 * 4 * 3, 0, 1, ShaderStage::Vertex),
@@ -99,19 +100,31 @@ void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice)
     LM_INFO("Mesh loaded!");
     indexCount = mesh.indices.size();
     u32 i = 0;
-    for (auto (attr) : mesh.attributes) {
-        IBuffer::Desc vertexDesc(BufferUsage::Vertex, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(attr.second.data)));
-        
+
+    auto attrList = std::vector<std::pair<Semantic, std::pair<ElementType, std::span<const std::byte>>>>();
+
+    attrList.emplace_back(Semantic::Position, std::make_pair(ElementType::Float3, std::as_bytes(std::span(mesh.positions))));
+    attrList.emplace_back(Semantic::Normal, std::make_pair(ElementType::Float3, std::as_bytes(std::span(mesh.normals))));
+    attrList.emplace_back(Semantic::TexCoord0, std::make_pair(ElementType::Float2, std::as_bytes(std::span(mesh.uvs))));
+    
+    LM_CORE_INFO("Index count: {0}", mesh.indices.size());
+    
+    for (auto attr : attrList) {
+        IBuffer::Desc vertexDesc(BufferUsage::Vertex, MemoryUsage::CPU_TO_GPU, attr.second.second);
+    
         auto buffer = dxDevice->CreateBuffer(vertexDesc);
         
         vertexBuffers[i] = VertexBufferView {
-        buffer,
+            buffer,
             0,
-            GetVertexElementSize(attr.second.format),
-            buffer->GetSize()
+            GetVertexElementSize(attr.second.first),
+            attr.second.second.size_bytes()
         };
-        i++;
+        LM_CORE_INFO("stride: {0}, size: {1}", vertexBuffers[i].stride, vertexBuffers[i].size);
+        i++;    
     }
+
+    
 
     // IBuffer::Desc vertexDesc(BufferUsage::Vertex, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(mesh.vertices)));
 
@@ -260,7 +273,7 @@ void TestDXLayer::OnUpdate()
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
 
     ImGui::Render();
 
@@ -301,14 +314,15 @@ void TestDXLayer::OnUpdate()
 
     cmdList->BindTexture(3, textureView.get());
 
-    float4x4 modelMatrix = linalg::pose_matrix(linalg::rotation_quat(float3(0, 1, 0), time / 2), float3(0, 0, 0));
+    // float4x4 modelMatrix = linalg::pose_matrix(linalg::rotation_quat(float3(0, 1, 0), time / 2), float3(0, 0, 0));
+    float4x4 modelMatrix = linalg::identity;
 
     float3 cameraPos = float3(0, 2, -4);
-    float4 cameraRot = from_euler(-rot.y, rot.x, 0.0);
+    float4 cameraRot = from_euler(-rot.y*4, rot.x*4, 0.0);
     // float3 cameraPos = float3(4, 0, 0);
 
-    float3   forward    = linalg::qzdir(cameraRot);
-    float4x4 viewMatrix = linalg::lookat_matrix(cameraPos, cameraPos + forward, float3(0, 1, 0), linalg::pos_z);
+    float3   forward    = linalg::qzdir(cameraRot)*5;
+    float4x4 viewMatrix = linalg::lookat_matrix(forward, float3(0, 0, 0), float3(0, 1, 0), linalg::pos_z);
     float4x4 projMatrix =
         linalg::perspective_matrix(3.141524f / 4.0f, 16.f / 9.f, .01f, 100.f, linalg::pos_z, linalg::zero_to_one);
     std::vector<float4x4> matrices = {modelMatrix, viewMatrix, projMatrix};

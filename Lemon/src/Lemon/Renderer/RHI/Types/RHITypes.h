@@ -186,7 +186,7 @@ struct RootParameter {
 /// @code maps to D3D12_RASTERIZER_DESC / VkPipelineRasterizationStateCreateInfo
 /// @endcode
 struct RasterizerState {
-    CullMode cullMode = CullMode::Front;
+    CullMode cullMode = CullMode::Back;
     FillMode fillMode = FillMode::Solid;
     bool     depthClipEnable = true;
     bool     frontAsCCW = false; /// DX12 default is clock-wise; Vulkan default is counter-clockwise

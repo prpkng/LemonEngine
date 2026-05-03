@@ -23,12 +23,12 @@ VertexLayout VertexLayoutBuilder::Build(const InputRate inputRate)
 
 InputLayoutBuilder::InputLayoutBuilder() : m_ElementCount(0), m_AccumulatedOffset(0) {}
 
-InputLayoutBuilder& InputLayoutBuilder::WithElement(Semantic semantic, ElementType type, const InputRate inputRate)
+InputLayoutBuilder& InputLayoutBuilder::WithElement(Semantic semantic, ElementType type, u32 binding, const InputRate inputRate)
 {
     auto attribute = VertexAttribute{
         .semantic  = semantic,
         .format    = type,
-        .binding   = 0,
+        .binding   = binding,
         .offset    = m_AccumulatedOffset,
         .inputRate = inputRate,
         .location  = m_ElementCount,

@@ -25,7 +25,7 @@ namespace Lemon::RHI
     {
     public:
         explicit InputLayoutBuilder();
-        InputLayoutBuilder& WithElement(Semantic semantic, ElementType type, InputRate inputRate = InputRate::PerVertex);
+        InputLayoutBuilder& WithElement(Semantic semantic, ElementType type, u32 binding = 0, InputRate inputRate = InputRate::PerVertex);
         [[nodiscard]] std::vector<VertexAttribute> Build();
 
     private:

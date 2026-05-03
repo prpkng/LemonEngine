@@ -33,14 +33,14 @@ template <typename T> void Append(std::vector<u8>& dst, const T& value)
 inline std::vector<MeshAsset> loadMeshes(const std::string& path, const LoadOptions& opts = {})
 {
 
-    unsigned int flags = aiProcess_JoinIdenticalVertices;
+    unsigned int flags = aiProcess_CalcTangentSpace | aiProcess_ConvertToLeftHanded | aiProcess_ImproveCacheLocality;
 
-    if (opts.triangulate)
-        flags |= aiProcess_Triangulate;
-    if (opts.leftHanded)
-        flags |= aiProcess_ConvertToLeftHanded;
-    if (opts.generateNormals)
-        flags |= aiProcess_GenSmoothNormals;
+    // if (opts.triangulate)
+    //     flags |= aiProcess_Triangulate;
+    // if (opts.leftHanded)
+    //     flags |= aiProcess_ConvertToLeftHanded;
+    // if (opts.generateNormals)
+    //     flags |= aiProcess_GenSmoothNormals;
 
     Assimp::Importer importer;
     const aiScene*   scene = importer.ReadFile(path, flags);
@@ -59,40 +59,32 @@ inline std::vector<MeshAsset> loadMeshes(const std::string& path, const LoadOpti
         // ── vertices ──────────────────────────────────────────────────────────
         // mesh.attributes.insert({Semantic::Position, });
 
-        AttributeStream posStream(ElementType::Float3);
-
-        posStream.data.reserve(RHI::GetVertexElementSize(ElementType::Float3) * aim->mNumVertices);
+        mesh.positions.reserve(aim->mNumVertices);
 
         for (u32 i = 0; i < aim->mNumVertices; ++i) {
             auto vert = aim->mVertices[i];
 
-            Append(posStream.data, float3(vert.x, vert.y, vert.z));
+            mesh.positions.emplace_back(vert.x, vert.y, vert.z);
         }
 
-        mesh.attributes.insert({Semantic::Position, std::move(posStream)});
-
         if (aim->HasNormals()) {
-            AttributeStream normalStream(ElementType::Float3);
 
-            normalStream.data.reserve(RHI::GetVertexElementSize(ElementType::Float3) * aim->mNumVertices);
+            mesh.normals.reserve(aim->mNumVertices);
             for (u32 i = 0; i < aim->mNumVertices; ++i) {
                 auto norm = aim->mNormals[i];
-                Append(normalStream.data, float3(norm.x, norm.y, norm.z));
+            
+                mesh.normals.emplace_back(norm.x, norm.y, norm.z);
             }
-
-            mesh.attributes.insert({Semantic::Normal, std::move(normalStream)});
         }
 
         if (aim->HasTextureCoords(0)) {
-            AttributeStream texCoordStream(ElementType::Float3);
 
-            texCoordStream.data.reserve(RHI::GetVertexElementSize(ElementType::Float3) * aim->mNumVertices);
+            mesh.uvs.reserve(aim->mNumVertices);
             for (u32 i = 0; i < aim->mNumVertices; ++i) {
-                auto norm = aim->mTextureCoords[0][i];
-                Append(texCoordStream.data, float3(norm.x, norm.y, norm.z));
-            }
+                auto uv = aim->mTextureCoords[0][i];
 
-            mesh.attributes.insert({Semantic::TexCoord0, std::move(texCoordStream)});
+                mesh.uvs.emplace_back(uv.x, uv.y);
+            }
         }
 
         // --- Indices ---------------
@@ -112,29 +104,3 @@ inline std::vector<MeshAsset> loadMeshes(const std::string& path, const LoadOpti
 
     return result;
 }
-
-// // ─────────────────────────────────────────────────────────────────────────────
-// //  loadFirstMesh()
-// //
-// //  Convenience wrapper — merges ALL sub-meshes into a single Mesh,
-// //  adjusting indices so they stay contiguous.
-// // ─────────────────────────────────────────────────────────────────────────────
-// inline MeshAsset loadFirstMesh(const std::string& path, const LoadOptions& opts = {})
-// {
-//     auto meshes = loadMeshes(path, opts);
-//     if (meshes.empty())
-//         throw std::runtime_error("No meshes found in: " + path);
-
-//     if (meshes.size() == 1)
-//         return std::move(meshes[0]);
-
-//     // merge
-//     Mesh merged;
-//     for (auto& m : meshes) {
-//         auto base = static_cast<unsigned int>(merged.vertices.size());
-//         merged.vertices.insert(merged.vertices.end(), m.vertices.begin(), m.vertices.end());
-//         for (unsigned int idx : m.indices)
-//             merged.indices.push_back(idx + base);
-//     }
-//     return merged;
-// }
