@@ -64,7 +64,7 @@ using namespace Lemon::DX;
 
 void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device)
 {
-    
+
     IPipeline::Desc desc{};
     desc.vertexShaderPath       = "assets/shader.hlsl";
     desc.pixelShaderPath        = "assets/shader.hlsl";
@@ -75,6 +75,7 @@ void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device)
                                       .WithElement(Semantic::Normal, ElementType::Float3, 1)
                                       .WithElement(Semantic::TexCoord0, ElementType::Float2, 2)
                                       .Build();
+                                      
     desc.rootParameters         = {RootParameter(RootParamType::Constants, 1, 0, 0, ShaderStage::All),
                                    RootParameter(RootParamType::Constants, 4 * 4 * 3, 0, 1, ShaderStage::Vertex),
                                    RootParameter(RootParamType::Constants, 1, 1, 0, ShaderStage::Vertex),
@@ -90,63 +91,73 @@ void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device)
 
 static size_t indexCount = 0;
 
-
 void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice)
 {
     LM_INFO("Loading mesh");
-    auto mesh  = loadMeshes("assets/monkey.fbx")[0];
-    
+    // auto mesh = loadMeshes("assets/cone.fbx")[0];
+
+    auto positions = std::vector<float3>{
+        float3(-1.0f, 1.0f, 0.0f),
+        float3(1.0f, 1.0f, 0.0f),
+        float3(-1.0f, -1.0f, 0.0f),
+        float3(1.0f, -1.0f, 0.0f),
+    };
+
+    auto indices = std::vector<u32> {
+        0, 1, 2,
+        2, 1, 3,
+        2, 1, 0,
+        3, 1, 2
+    };
+
+    auto normals = std::vector<float3> {
+        float3(0.0f, 0.0f, 0.0f),
+        float3(0.0f, 0.0f, 0.0f),
+        float3(0.0f, 0.0f, 0.0f),
+        float3(0.0f, 0.0f, 0.0f),
+    };
+
+    auto uvs = std::vector<float2> {
+        float2(0.0f, 0.0f),
+        float2(1.0f, 0.0f),
+        float2(0.0f, 1.0f),
+        float2(1.0f, 1.0f),
+    };
 
     LM_INFO("Mesh loaded!");
-    indexCount = mesh.indices.size();
-    u32 i = 0;
+    indexCount = indices.size();
+    u32 i      = 0;
 
     auto attrList = std::vector<std::pair<Semantic, std::pair<ElementType, std::span<const std::byte>>>>();
 
-    attrList.emplace_back(Semantic::Position, std::make_pair(ElementType::Float3, std::as_bytes(std::span(mesh.positions))));
-    attrList.emplace_back(Semantic::Normal, std::make_pair(ElementType::Float3, std::as_bytes(std::span(mesh.normals))));
-    attrList.emplace_back(Semantic::TexCoord0, std::make_pair(ElementType::Float2, std::as_bytes(std::span(mesh.uvs))));
-    
-    LM_CORE_INFO("Index count: {0}", mesh.indices.size());
-    
-    for (auto attr : attrList) {
-        IBuffer::Desc vertexDesc(BufferUsage::Vertex, MemoryUsage::CPU_TO_GPU, attr.second.second);
-    
-        auto buffer = dxDevice->CreateBuffer(vertexDesc);
-        
-        vertexBuffers[i] = VertexBufferView {
-            buffer,
-            0,
-            GetVertexElementSize(attr.second.first),
-            attr.second.second.size_bytes()
-        };
-        LM_CORE_INFO("stride: {0}, size: {1}", vertexBuffers[i].stride, vertexBuffers[i].size);
-        i++;    
+    attrList.emplace_back(Semantic::Position,
+                          std::make_pair(ElementType::Float3, std::as_bytes(std::span(positions))));
+    attrList.emplace_back(Semantic::Normal,
+                          std::make_pair(ElementType::Float3, std::as_bytes(std::span(normals))));
+    attrList.emplace_back(Semantic::TexCoord0, std::make_pair(ElementType::Float2, std::as_bytes(std::span(uvs))));
+
+    for (auto uv : uvs) {
+        LM_CORE_INFO("UV: {0}, {1}", uv.x, uv.y);
     }
 
-    
+    LM_CORE_INFO("Index count: {0}", indices.size());
 
-    // IBuffer::Desc vertexDesc(BufferUsage::Vertex, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(mesh.vertices)));
+    for (auto attr : attrList) {
+        IBuffer::Desc vertexDesc(BufferUsage::Vertex, MemoryUsage::CPU_TO_GPU, attr.second.second);
 
-    // auto layout = VertexLayoutBuilder()
-    //                   .WithElement("POSITION", ElementType::Float3)
-    //                   .WithElement("NORMAL", ElementType::Float3)
-    //                   .WithElement("TEXCOORD", ElementType::Float2)
-    //                   .Build();
+        auto buffer = dxDevice->CreateBuffer(vertexDesc);
 
-    // vertexBuffer = std::dynamic_pointer_cast<DXVertexBuffer>(dxDevice->CreateVertexBuffer(vertexDesc, layout));
+        vertexBuffers[i] =
+            VertexBufferView{buffer, 0, GetVertexElementSize(attr.second.first), attr.second.second.size_bytes()};
+        LM_CORE_INFO("stride: {0}, size: {1}", vertexBuffers[i].stride, vertexBuffers[i].size);
+        i++;
+    }
 
-    IBuffer::Desc indexDesc(BufferUsage::Index, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(mesh.indices)));
+    IBuffer::Desc indexDesc(BufferUsage::Index, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(indices)));
 
     auto buffer = dxDevice->CreateBuffer(indexDesc);
 
-    indexBuffer = IndexBufferView {
-        buffer,
-        0,
-        buffer->GetSize(),
-        ElementType::Uint
-    };
-    
+    indexBuffer = IndexBufferView{buffer, 0, buffer->GetSize(), ElementType::Uint};
 }
 
 TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Test DX Layer")
@@ -159,9 +170,9 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
     desc.initialHeight    = window->GetHeight();
     Renderer::Instance().Init(wnd, desc);
 
-    device          = std::dynamic_pointer_cast<DXDevice>(Renderer::Instance().GetDevice());
-    graphicsQueue   = std::dynamic_pointer_cast<DXCommandQueue>(Renderer::Instance().GetGraphicsQueue());
-    swapchain       = std::dynamic_pointer_cast<DXSwapchain>(Renderer::Instance().GetSwapchain());
+    device        = std::dynamic_pointer_cast<DXDevice>(Renderer::Instance().GetDevice());
+    graphicsQueue = std::dynamic_pointer_cast<DXCommandQueue>(Renderer::Instance().GetGraphicsQueue());
+    swapchain     = std::dynamic_pointer_cast<DXSwapchain>(Renderer::Instance().GetSwapchain());
 
     ITexture::Desc depthDesc{};
     depthDesc.width          = window->GetWidth();
@@ -171,7 +182,7 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
     depthDesc.debugName      = "DepthBuffer";
 
     depthTextureHandle = Renderer::Instance().CreateTexture(depthDesc);
-    auto depthTexture = Renderer::Instance().GetNativeTexture(depthTextureHandle);
+    auto depthTexture  = Renderer::Instance().GetNativeTexture(depthTextureHandle);
     depthTextureView =
         std::shared_ptr<DXTextureView>(dynamic_cast<DXTextureView*>(depthTexture->CreateDSV().release()));
 
@@ -179,8 +190,7 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
 
     InitBuffers(device);
 
-    
-    textureHandle = Renderer::Instance().LoadTexture("assets/test.png");
+    textureHandle = Renderer::Instance().LoadTexture("assets/tex.png");
     // texture = dynamic_cast<DXTexture*>(device->LoadTexture("assets/test.png"));
 
     auto texture = Renderer::Instance().GetNativeTexture(textureHandle);
@@ -202,14 +212,13 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
     initInfo.NumFramesInFlight       = MAX_FRAMES_IN_FLIGHT;
     initInfo.RTVFormat               = DXGI_FORMAT_R8G8B8A8_UNORM;
     initInfo.DSVFormat               = DXGI_FORMAT_UNKNOWN;
-    initInfo.UserData = device.get();
+    initInfo.UserData                = device.get();
     // Allocating srv descriptors (for textures) is up to the application
     // (curent version of the imgui backend will only allocate one descriptor)
 
-
     auto allocation = device->m_SrvHeap->Allocate();
 
-    initInfo.SrvDescriptorHeap    = device->m_SrvHeap->GetHeap();
+    initInfo.SrvDescriptorHeap            = device->m_SrvHeap->GetHeap();
     initInfo.LegacySingleSrvCpuDescriptor = allocation.cpu;
     initInfo.LegacySingleSrvGpuDescriptor = allocation.gpu;
     // initInfo.SrvDescriptorAllocFn = [](ImGui_ImplDX12_InitInfo* info, D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle,
@@ -241,7 +250,8 @@ float4 from_euler(float pitch, float yaw, float roll)
     return linalg::qmul(qy, linalg::qmul(qx, qz));
 }
 
-TestDXLayer::~TestDXLayer() {
+TestDXLayer::~TestDXLayer()
+{
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
@@ -277,9 +287,7 @@ void TestDXLayer::OnUpdate()
 
     ImGui::Render();
 
-
     // ===========
-
 
     // --- Throttle: wait on the OLDEST frame slot before reusing it ---
     // On frames 0 and 1 this value is 0, so CpuWaitForValue returns
@@ -308,7 +316,7 @@ void TestDXLayer::OnUpdate()
     cmdList->SetScissor({0, 0, LONG_MAX, LONG_MAX});
 
     cmdList->SetRenderTargets({swapchain->GetBackbufferView(backBufferIndex)}, depthTextureView.get());
- 
+
     cmdList->SetPrimitiveTopology(PrimitiveTopology::TriangleList);
     cmdList->BindPipeline(pipeline);
 
@@ -318,10 +326,10 @@ void TestDXLayer::OnUpdate()
     float4x4 modelMatrix = linalg::identity;
 
     float3 cameraPos = float3(0, 2, -4);
-    float4 cameraRot = from_euler(-rot.y*4, rot.x*4, 0.0);
+    float4 cameraRot = from_euler(-rot.y * 4, rot.x * 4, 0.0);
     // float3 cameraPos = float3(4, 0, 0);
 
-    float3   forward    = linalg::qzdir(cameraRot)*5;
+    float3   forward    = linalg::qzdir(cameraRot) * 5;
     float4x4 viewMatrix = linalg::lookat_matrix(forward, float3(0, 0, 0), float3(0, 1, 0), linalg::pos_z);
     float4x4 projMatrix =
         linalg::perspective_matrix(3.141524f / 4.0f, 16.f / 9.f, .01f, 100.f, linalg::pos_z, linalg::zero_to_one);
@@ -337,9 +345,8 @@ void TestDXLayer::OnUpdate()
 
     cmdList->DrawIndexed(indexCount, 1, 0, 0, 0);
 
-
     ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), static_cast<DXCommandList*>(cmdList.get())->GetHandle());
-    
+
     // Transition the backBuffer to the present state
     cmdList->TransitionTexture(swapchain->GetBackbuffer(backBufferIndex).get(), ResourceState::Present);
 

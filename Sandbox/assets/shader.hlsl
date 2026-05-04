@@ -55,9 +55,8 @@ PSInput VSMain(VSInput input) {
 
 // Pixel Shader
 float4 PSMain(PSInput input) : SV_TARGET {
-    float3 normalMap = normalize(input.normal);
     // normalMap.g = -normalMap.g; // <--- FLIP GREEN CHANNEL
 
-    return float4(normalMap, 1.0);
+    return float4(input.uv, 0.0, 1.0);
     // return tex.Sample(linearSmp, input.uv);
 }
