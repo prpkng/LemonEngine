@@ -23,7 +23,7 @@ VertexLayout VertexLayoutBuilder::Build(const InputRate inputRate)
 
 InputLayoutBuilder::InputLayoutBuilder() : m_ElementCount(0), m_AccumulatedOffset(0) {}
 
-InputLayoutBuilder& InputLayoutBuilder::WithElement(Semantic semantic, ElementType type, u32 binding, const InputRate inputRate)
+InputLayoutBuilder& InputLayoutBuilder::WithNewBuffer(Semantic semantic, ElementType type, u32 binding, const InputRate inputRate)
 {
     auto attribute = VertexAttribute{
         .semantic  = semantic,
@@ -36,9 +36,15 @@ InputLayoutBuilder& InputLayoutBuilder::WithElement(Semantic semantic, ElementTy
     attribute.BuildSemanticName();
     
     m_Attributes.emplace_back(attribute);
+    m_ElementCount++;
+    return *this;
+}
+
+InputLayoutBuilder& InputLayoutBuilder::WithSequentialElement(Semantic semantic, ElementType type, u32 binding, const InputRate inputRate) {
+    WithNewBuffer(semantic, type, binding, inputRate);
+
     const size_t size = GetVertexElementSize(type);
     m_AccumulatedOffset += size;
-    m_ElementCount++;
     return *this;
 }
 

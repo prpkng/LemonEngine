@@ -33,14 +33,14 @@ template <typename T> void Append(std::vector<u8>& dst, const T& value)
 inline std::vector<MeshAsset> loadMeshes(const std::string& path, const LoadOptions& opts = {})
 {
 
-    unsigned int flags = aiProcess_CalcTangentSpace | aiProcess_ConvertToLeftHanded | aiProcess_ImproveCacheLocality;
+    unsigned int flags = aiProcess_CalcTangentSpace | aiProcess_ImproveCacheLocality;
 
-    // if (opts.triangulate)
-    //     flags |= aiProcess_Triangulate;
-    // if (opts.leftHanded)
-    //     flags |= aiProcess_ConvertToLeftHanded;
-    // if (opts.generateNormals)
-    //     flags |= aiProcess_GenSmoothNormals;
+    if (opts.triangulate)
+        flags |= aiProcess_Triangulate;
+    if (opts.leftHanded)
+        flags |= aiProcess_ConvertToLeftHanded;
+    if (opts.generateNormals)
+        flags |= aiProcess_GenSmoothNormals;
 
     Assimp::Importer importer;
     const aiScene*   scene = importer.ReadFile(path, flags);

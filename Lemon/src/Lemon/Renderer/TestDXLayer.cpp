@@ -71,9 +71,9 @@ void TestDXLayer::InitShaderPipeline(const std::shared_ptr<DXDevice>& device)
     desc.renderTargetFormats    = {Format::RGBA8_UNORM};
     desc.blendState.blendEnable = true;
     desc.inputLayout            = InputLayoutBuilder()
-                                      .WithElement(Semantic::Position, ElementType::Float3, 0)
-                                      .WithElement(Semantic::Normal, ElementType::Float3, 1)
-                                      .WithElement(Semantic::TexCoord0, ElementType::Float2, 2)
+                                      .WithNewBuffer(Semantic::Position, ElementType::Float3, 0)
+                                      .WithNewBuffer(Semantic::Normal, ElementType::Float3, 1)
+                                      .WithNewBuffer(Semantic::TexCoord0, ElementType::Float2, 2)
                                       .Build();
                                       
     desc.rootParameters         = {RootParameter(RootParamType::Constants, 1, 0, 0, ShaderStage::All),
@@ -94,53 +94,21 @@ static size_t indexCount = 0;
 void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice)
 {
     LM_INFO("Loading mesh");
-    // auto mesh = loadMeshes("assets/cone.fbx")[0];
-
-    auto positions = std::vector<float3>{
-        float3(-1.0f, 1.0f, 0.0f),
-        float3(1.0f, 1.0f, 0.0f),
-        float3(-1.0f, -1.0f, 0.0f),
-        float3(1.0f, -1.0f, 0.0f),
-    };
-
-    auto indices = std::vector<u32> {
-        0, 1, 2,
-        2, 1, 3,
-        2, 1, 0,
-        3, 1, 2
-    };
-
-    auto normals = std::vector<float3> {
-        float3(0.0f, 0.0f, 0.0f),
-        float3(0.0f, 0.0f, 0.0f),
-        float3(0.0f, 0.0f, 0.0f),
-        float3(0.0f, 0.0f, 0.0f),
-    };
-
-    auto uvs = std::vector<float2> {
-        float2(0.0f, 0.0f),
-        float2(1.0f, 0.0f),
-        float2(0.0f, 1.0f),
-        float2(1.0f, 1.0f),
-    };
+    auto mesh = loadMeshes("assets/monkey.fbx")[2];
 
     LM_INFO("Mesh loaded!");
-    indexCount = indices.size();
+    indexCount = mesh.indices.size();
     u32 i      = 0;
 
     auto attrList = std::vector<std::pair<Semantic, std::pair<ElementType, std::span<const std::byte>>>>();
 
     attrList.emplace_back(Semantic::Position,
-                          std::make_pair(ElementType::Float3, std::as_bytes(std::span(positions))));
+                          std::make_pair(ElementType::Float3, std::as_bytes(std::span(mesh.positions))));
     attrList.emplace_back(Semantic::Normal,
-                          std::make_pair(ElementType::Float3, std::as_bytes(std::span(normals))));
-    attrList.emplace_back(Semantic::TexCoord0, std::make_pair(ElementType::Float2, std::as_bytes(std::span(uvs))));
+                          std::make_pair(ElementType::Float3, std::as_bytes(std::span(mesh.normals))));
+    attrList.emplace_back(Semantic::TexCoord0, std::make_pair(ElementType::Float2, std::as_bytes(std::span(mesh.uvs))));
 
-    for (auto uv : uvs) {
-        LM_CORE_INFO("UV: {0}, {1}", uv.x, uv.y);
-    }
-
-    LM_CORE_INFO("Index count: {0}", indices.size());
+    LM_CORE_INFO("Index count: {0}", mesh.indices.size());
 
     for (auto attr : attrList) {
         IBuffer::Desc vertexDesc(BufferUsage::Vertex, MemoryUsage::CPU_TO_GPU, attr.second.second);
@@ -153,7 +121,7 @@ void TestDXLayer::InitBuffers(const std::shared_ptr<DXDevice>& dxDevice)
         i++;
     }
 
-    IBuffer::Desc indexDesc(BufferUsage::Index, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(indices)));
+    IBuffer::Desc indexDesc(BufferUsage::Index, MemoryUsage::CPU_TO_GPU, std::as_bytes(std::span(mesh.indices)));
 
     auto buffer = dxDevice->CreateBuffer(indexDesc);
 

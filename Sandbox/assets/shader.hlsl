@@ -6,7 +6,7 @@ struct VSInput {
 
 struct PSInput {
     float4 position : SV_POSITION;
-    nointerpolation float3 normal : NORMAL;
+    float3 normal : NORMAL;
     float2 uv : TEXCOORD0;
 };
 
@@ -55,8 +55,8 @@ PSInput VSMain(VSInput input) {
 
 // Pixel Shader
 float4 PSMain(PSInput input) : SV_TARGET {
-    // normalMap.g = -normalMap.g; // <--- FLIP GREEN CHANNEL
+    // normalMap.g = -normalMap.g;D // <--- FLIP GREEN CHANNEL
 
-    return float4(input.uv, 0.0, 1.0);
+    return float4(input.normal, 1.0);
     // return tex.Sample(linearSmp, input.uv);
 }
