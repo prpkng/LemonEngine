@@ -16,7 +16,7 @@
 #include "Backends/DX/API/DXPSO.h"
 #include "Backends/DX/API/DXRootSignatureDesc.h"
 #include "Backends/DX/Commands/DXCommandQueue.h"
-#include "ResourcePool.h"
+#include "Resources/ResourceManager.h"
 
 // #include <ResourceUploadBatch.h>
 // #include <DescriptorHeap.h>

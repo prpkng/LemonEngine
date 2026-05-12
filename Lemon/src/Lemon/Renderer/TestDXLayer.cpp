@@ -149,8 +149,8 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
     depthDesc.isDepthStencil = true;
     depthDesc.debugName      = "DepthBuffer";
 
-    depthTextureHandle = Renderer::Instance().CreateTexture(depthDesc);
-    auto depthTexture  = Renderer::Instance().GetNativeTexture(depthTextureHandle);
+    depthTextureHandle = Renderer::Instance().GetResources().CreateTexture(depthDesc);
+    auto depthTexture  = Renderer::Instance().GetResources().GetTexture(depthTextureHandle);
     depthTextureView =
         std::shared_ptr<DXTextureView>(dynamic_cast<DXTextureView*>(depthTexture->CreateDSV().release()));
 
@@ -158,10 +158,10 @@ TestDXLayer::TestDXLayer(const std::unique_ptr<Lemon::Window>& wnd) : Layer("Tes
 
     InitBuffers(device);
 
-    textureHandle = Renderer::Instance().LoadTexture("assets/tex.png");
+    textureHandle = Renderer::Instance().GetResources().LoadTexture("assets/tex.png");
     // texture = dynamic_cast<DXTexture*>(device->LoadTexture("assets/test.png"));
 
-    auto texture = Renderer::Instance().GetNativeTexture(textureHandle);
+    auto texture = Renderer::Instance().GetResources().GetTexture(textureHandle);
 
     textureView = std::unique_ptr<DXTextureView>(dynamic_cast<DXTextureView*>(texture->CreateSRV().release()));
 

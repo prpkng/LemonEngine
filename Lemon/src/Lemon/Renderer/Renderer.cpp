@@ -38,25 +38,12 @@ void Renderer::Init(const std::unique_ptr<Window>& wnd, RHI::IDevice::Desc devic
     swapchain          = m_Device->CreateSwapchain(graphicsQueue, swapChainDesc);
 }
 
-TextureHandle Renderer::CreateTexture(const RHI::ITexture::Desc& desc) {
-    // auto handle = m_TextureDescPool.alloc(desc);
-
-    DX::DXTexture texture = *reinterpret_cast<DX::DXTexture*>(m_Device->CreateTexture(desc));
-    return m_TextureNativePool.insertOrDie(std::move(texture));
-}
-
-TextureHandle Renderer::LoadTexture(std::string_view path, RHI::Format format, u32 mipLevels) {
-    // auto handle = m_TextureDescPool.alloc(path, format, mipLevels);
-    DX::DXTexture texture = *reinterpret_cast<DX::DXTexture*>(m_Device->LoadTexture(path, format, mipLevels));
-    return m_TextureNativePool.insertOrDie(std::move(texture));
-}
-
 std::string Renderer::GetStats() const {
     std::stringstream ss;
-    ss << "\n=== RESOURCE POOLS ===\n";
-    m_TextureNativePool.forEach([&ss](TextureHandle handle, const DX::DXTexture* texture) {
-        ss << fmt::format("Texture [{0}]: \"{1}\" {2}x{3}x{4}\n", (u32)handle.index, texture->GetDesc().debugName, texture->GetDesc().width, texture->GetDesc().height, texture->GetDesc().arraySize);
-    });
+    // ss << "\n=== RESOURCE POOLS ===\n";
+    // .forEach([&ss](TextureHandle handle, const DX::DXTexture* texture) {
+    //     ss << fmt::format("Texture [{0}]: \"{1}\" {2}x{3}x{4}\n", (u32)handle.index, texture->GetDesc().debugName, texture->GetDesc().width, texture->GetDesc().height, texture->GetDesc().arraySize);
+    // });
 
     return ss.str();
 }

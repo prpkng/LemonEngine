@@ -104,8 +104,10 @@ add_library(Lemon SHARED
 
 "src/Lemon/Renderer/Renderer.h"
 "src/Lemon/Renderer/Renderer.cpp"
-"src/Lemon/Renderer/ResourcePool.h"
-"src/Lemon/Renderer/ResourcePool.cpp"
+"src/Lemon/Renderer/Resources/ResourcePool.h"
+"src/Lemon/Renderer/Resources/ResourceRegistry.h"
+"src/Lemon/Renderer/Resources/ResourceManager.h"
+"src/Lemon/Renderer/Resources/ResourceManager.cpp"
 "src/Lemon/ImGui/ImGuiLayer.h"
 "src/Lemon/ImGui/ImGuiLayer.cpp"
 "src/Lemon/Renderer/MeshAsset.h"

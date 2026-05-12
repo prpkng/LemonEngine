@@ -90,33 +90,7 @@ public:
 
     // === Allocation =======================
 
-    // template <typename... Args>
-    // [[nodiscard]] std::expected<Handle, PoolError>
-    // alloc(T object)
-    // {
-    //     if (m_FreeList.empty())
-    //         return std::unexpected(PoolError::Exhausted);
-
-    //     const u32 idx = m_FreeList.back();
-    //     m_FreeList.pop_back();
-
-    //     m_Slots[idx] = std::move(object);
-    //     m_Occupancy[idx] = true;
-
-    //     return Handle{idx, m_Versions[idx], 1};
-    // }
-
-    // template <typename... Args>
-    // [[nodiscard]] Handle allocOrDie(T object, std::source_location loc = std::source_location::current())
-    // {
-    //     auto result = alloc(std::move(object));
-    //     if (!result) [[unlikely]]
-    //         LM_CORE_FATAL("ResourcePool exhausasted at {}:{}", loc.file_name(), loc.line());
-
-    //     return result.value();
-    // }
-
-    template <typename... Args> [[nodiscard]] std::expected<Handle, PoolError> insert(T&& value)
+    [[nodiscard]] std::expected<Handle, PoolError> insert(T&& value)
     {
         if (m_FreeList.empty())
             return std::unexpected(PoolError::Exhausted);
@@ -132,12 +106,11 @@ public:
         return Handle{idx, m_Versions[idx], 1};
     }
 
-    template <typename... Args>
     [[nodiscard]] Handle insertOrDie(T&& value, std::source_location loc = std::source_location::current())
     {
         auto result = insert(std::move(value));
-        if (!result.has_value()) { [[unlikely]]
-            LM_CORE_FATAL("ResourcePool exhausasted at {}:{}", loc.file_name(), loc.line());
+        if (!result.has_value()) {
+            [[unlikely]] LM_CORE_FATAL("ResourcePool exhausasted at {}:{}", loc.file_name(), loc.line());
         }
 
         return result.value();
@@ -157,7 +130,7 @@ public:
             return std::unexpected(PoolError::DoubleFree);
 
         // m_Slots[handle.index].destroy();
-        std::destroy_at(&m_Slots[handle.index]);
+        std::destroy_at(ptr(handle.index));
         handle.valid              = false;
         m_Occupancy[handle.index] = false;
         m_Versions[handle.index]++; // Invalidade previous copies of this handle
@@ -178,7 +151,7 @@ public:
     }
 
     /// Safe - validates generation and returns nullptr on stale/null handles
-    [[nodiscard]] const T* getConst(Handle handle) const noexcept
+    [[nodiscard]] const T* get(Handle handle) const noexcept
     {
         if (!validate(handle))
             return nullptr;
@@ -193,7 +166,7 @@ public:
         if (!validate(handle))
             return std::unexpected(PoolError::StaleHandle);
 
-        return &m_Slots[handle.index];
+        return ptr(handle.index);
     }
 
     [[nodiscard]] std::expected<const T*, PoolError> tryGet(Handle handle) const noexcept
@@ -203,13 +176,13 @@ public:
         if (!validate(handle))
             return std::unexpected(PoolError::StaleHandle);
 
-        return &m_Slots[handle.index];
+        return ptr(handle.index);
     }
 
     [[nodiscard]] T& getUnchecked(Handle handle) noexcept
     {
         LM_CORE_ASSERT(validate(handle));
-        return &m_Slots[handle.index];
+        return ptr(handle.index);
     }
 
     // === Iteration =======================
